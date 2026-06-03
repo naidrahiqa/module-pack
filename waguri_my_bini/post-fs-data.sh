@@ -1,5 +1,5 @@
 #!/system/bin/sh
-# Waguri My Bini - Stable Boot Protection
+# Waguri My Bini - Stable Boot Protection (Hardened v2.3)
 MODDIR=${0%/*}
 
 # MASALAH 4 FIX: Proteksi Akses /data
@@ -13,7 +13,9 @@ while [ ! -d "/data/local/tmp" ] || [ ! -w "/data/local/tmp" ]; do
     sleep 1
     timeout=$((timeout + 1))
     if [ $timeout -gt 10 ]; then
-        # Jika /data tidak siap, jangan paksa tracker tapi tetap jalankan modul
+        # Jika /data tidak siap setelah 10s, kemungkinan besar bootloop/ecryptfs error
+        # Disable modul demi keselamatan
+        touch "$MODDIR/disable"
         exit 0
     fi
 done

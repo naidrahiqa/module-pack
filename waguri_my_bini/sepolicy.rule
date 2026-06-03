@@ -1,18 +1,20 @@
-# Waguri Fix Suite - Hardened SELinux Rules
+# Waguri Fix Suite - Hardened SELinux Rules v2.4 (Insurgent)
 # Device: Redmi 12 4G (fire) | Focus: Stability & Security
 
 # 1. MEDIA PROVIDER ACCESS (Fix Storage Invisibility)
-# Hanya memberikan izin ke MediaProvider (AOSP/Google) dan system apps
-allow { mediaserver mediaprovider system_app priv_app } { mnt_user_file mnt_pass_through_file storage_file } dir { read open getattr search }
-allow { mediaserver mediaprovider system_app priv_app } { mnt_user_file mnt_pass_through_file storage_file } file { read open getattr }
-allow { mediaserver mediaprovider system_app priv_app } { sdcardfs media_rw_data_file } dir { read open getattr search }
-allow { mediaserver mediaprovider system_app priv_app } { sdcardfs media_rw_data_file } file { read open getattr }
+allow { mediaserver media_app system_app priv_app } { mnt_user_file mnt_pass_through_file storage_file } dir { read open getattr search }
+allow { mediaserver media_app system_app priv_app } { mnt_user_file mnt_pass_through_file storage_file } file { read open getattr }
+allow { mediaserver media_app system_app priv_app } { sdcardfs media_rw_data_file } dir { read open getattr search }
+allow { mediaserver media_app system_app priv_app } { sdcardfs media_rw_data_file } file { read open getattr }
 
 # 2. SYSTEM SERVER STABILITY
-# Tetap izinkan system_server mengelola resource agar tidak lag saat storage penuh
 allow system_server self:capability { sys_resource }
 allow system_server cgroup:file { write open }
 allow system_server cgroup_v2:file { write open }
 
-# 3. FINGERPRINT & HAL ACCESS (Specific for fire)
+# 3. FINGERPRINT & HAL ACCESS
 allow hal_fingerprint_default hal_power_hwservice hwservice_manager find
+
+# 4. BUG 1 FIX - SELinux rules for Rescue Party Property Fix
+# Mengizinkan Magisk dan Shell untuk mengubah property yang dikontrol flags_health_check
+allow { magisk shell } default_prop:property_service set

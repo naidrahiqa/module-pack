@@ -1,5 +1,5 @@
 #!/system/bin/sh
-# Castorice Thermal - Smart Charging for fire
+# Castorice Thermal - Smart Charging for fire (Hardened v1.3.2)
 LOGFILE="/data/local/tmp/castorice_thermal.log"
 
 log() {
@@ -44,10 +44,15 @@ fix_charging() {
     setprop persist.vendor.charge.fastcharge 1
 }
 
-# Tunggu boot selesai
-while [ "$(getprop sys.boot_completed)" != "1" ]; do sleep 15; done
+# --- MAIN ---
+# Tunggu boot dengan interval 5s (Hardened v1.3.2)
+while [ "$(getprop sys.boot_completed)" != "1" ]; do sleep 5; done
 
-# Loop interval 60 detik (Sesuai rekomendasi audit agar tidak stress)
+# Initial Sleep: Tunggu hardware node benar-benar siap setelah boot
+sleep 20
+
+log "Castorice Thermal Active"
+
 while true; do
     fix_charging
     sleep 60

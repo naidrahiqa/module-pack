@@ -1,5 +1,5 @@
 #!/system/bin/sh
-# Waguri v2.2 - Hang Watchdog (Redmi 12 Fixed)
+# Waguri v2.3 - Hang Watchdog (Redmi 12 Hardened)
 # Runs in background, detects & kills hung/ANR'd apps dynamically
 
 LOGFILE="/data/local/tmp/waguri_watchdog.log"
@@ -29,16 +29,18 @@ get_process_name() {
     cat /proc/$pid/cmdline 2>/dev/null | tr '\0' ' ' | awk '{print $1}'
 }
 
-# MASALAH 3 FIX: Fungsi clean_stuck() yang lebih cerdas
+# MASALAH 3 FIX: Fungsi clean_stuck() yang lebih cerdas (Hardened v2.3)
 clean_stuck() {
     local count=0
     
-    # 1. Cek IOWait Sistem (Helio G88 eMMC 5.1 Check)
-    local stat_line=$(cat /proc/stat | grep "cpu " | head -n 1)
-    local stat_val=$(echo $stat_line | awk '{print $6}')
-    local total_val=$(echo $stat_line | awk '{for(i=2;i<=8;i++) sum+=$i; print sum}')
+    # 1. Baca /proc/stat SATU KALI untuk akurasi
+    local cpu_stat=$(grep "cpu " /proc/stat | head -n 1)
     
-    local iowait_pct=$((stat_val * 100 / total_val))
+    # Parse nilai dari baris yang sama
+    local iowait_val=$(echo "$cpu_stat" | awk '{print $6}')
+    local total_val=$(echo "$cpu_stat" | awk '{for(i=2;i<=8;i++) sum+=$i; print sum}')
+    
+    local iowait_pct=$((iowait_val * 100 / total_val))
     
     if [ "$iowait_pct" -gt 40 ]; then
         log "SKIP: System IOWait is too high ($iowait_pct%). Storage is busy."
