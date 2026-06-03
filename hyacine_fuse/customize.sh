@@ -19,5 +19,7 @@ ui_print "- Extracting module files..."
 unzip -o "$ZIPFILE" 'service.sh' 'module.prop' -d "$MODPATH" >&2
 
 set_permission "$MODPATH/service.sh" 0 0 0755
-ui_print "- FUSE passthrough disabled."
-ui_print "- Storage invisibility fixed."
+
+ui_print "- Storage I/O read-ahead optimized (2048KB)."
+ui_print "- FUSE performance stability applied."
+ui_print "- Storage invisibility handled by Master Service."

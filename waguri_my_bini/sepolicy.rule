@@ -1,23 +1,18 @@
-# Waguri v2.0 - SELinux Rules for Project InfinityX (POCO F5)
-# Fixes: Storage visibility, foreground service crashes, MediaProvider access
+# Waguri Fix Suite - Hardened SELinux Rules
+# Device: Redmi 12 4G (fire) | Focus: Stability & Security
 
-# 1. STORAGE ACCESS - Fixes gallery/files not detecting storage
-allow { untrusted_app untrusted_app_all system_app platform_app priv_app } { mnt_user_file mnt_pass_through_file storage_file } dir { read open getattr search }
-allow { untrusted_app untrusted_app_all system_app platform_app priv_app } { mnt_user_file mnt_pass_through_file storage_file } file { read open getattr }
-allow { untrusted_app untrusted_app_all system_app platform_app priv_app } { sdcardfs media_rw_data_file } dir { read open getattr search }
-allow { untrusted_app untrusted_app_all system_app platform_app priv_app } { sdcardfs media_rw_data_file } file { read open getattr }
+# 1. MEDIA PROVIDER ACCESS (Fix Storage Invisibility)
+# Hanya memberikan izin ke MediaProvider (AOSP/Google) dan system apps
+allow { mediaserver mediaprovider system_app priv_app } { mnt_user_file mnt_pass_through_file storage_file } dir { read open getattr search }
+allow { mediaserver mediaprovider system_app priv_app } { mnt_user_file mnt_pass_through_file storage_file } file { read open getattr }
+allow { mediaserver mediaprovider system_app priv_app } { sdcardfs media_rw_data_file } dir { read open getattr search }
+allow { mediaserver mediaprovider system_app priv_app } { sdcardfs media_rw_data_file } file { read open getattr }
 
-# 2. MEDIA PROVIDER ACCESS - Fixes storage scanning
+# 2. SYSTEM SERVER STABILITY
+# Tetap izinkan system_server mengelola resource agar tidak lag saat storage penuh
 allow system_server self:capability { sys_resource }
 allow system_server cgroup:file { write open }
 allow system_server cgroup_v2:file { write open }
 
-# 3. FOREGROUND SERVICE FIX - Fixes EasyTether and similar app crashes
-allow { untrusted_app untrusted_app_all } self:capability { net_admin }
-allow system_server { untrusted_app untrusted_app_all } process { getsched setsched }
-
-# 4. SURFACEFLINGER BINDER - Fixes UI rendering issues
-allow surfaceflinger { untrusted_app untrusted_app_all } binder { call transfer }
-
-# 5. FINGERPRINT & HAL ACCESS
+# 3. FINGERPRINT & HAL ACCESS (Specific for fire)
 allow hal_fingerprint_default hal_power_hwservice hwservice_manager find
