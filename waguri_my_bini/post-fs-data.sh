@@ -1,44 +1,35 @@
 #!/system/bin/sh
-# Waguri v2.0 - post-fs-data.sh
-# Bootloop Protection + Early Storage Init
+# Waguri My Bini - Boot Protection Logic
+MODDIR=${0%/*}
+
+# MASALAH 1 FIX: Menggunakan path unik untuk menghindari konflik dengan modul lain
+TRACKER="/data/local/tmp/waguri_bini_boot_attempts"
+DISABLE_FLAG="/data/local/tmp/waguri_bini_disable"
+LOGFILE="/data/local/tmp/waguri_bini_boot.log"
 
 log() {
-    local msg="[WAGURI-V2-BOOT] $(date '+%m-%d %H:%M:%S') $*"
-    echo "$msg" >> /data/local/tmp/waguri_v2.log
+    echo "[$(date '+%m-%d %H:%M:%S')] $*" >> "$LOGFILE"
 }
 
-# 1. BOOTLOOP PROTECTOR
-if [ -f "/data/local/tmp/waguri_v2_disable" ]; then
-    log "SAFETY TRIGGER: Module disabled. Aborting."
-    exit 0
+# Reset tracker jika boot berhasil (dicek di service.sh nanti)
+# Tapi di sini kita hitung attempt-nya
+if [ ! -f "$TRACKER" ]; then
+    echo "1" > "$TRACKER"
+else
+    ATTEMPTS=$(cat "$TRACKER")
+    ATTEMPTS=$((ATTEMPTS + 1))
+    echo "$ATTEMPTS" > "$TRACKER"
+    log "Boot attempt: $ATTEMPTS"
+
+    if [ "$ATTEMPTS" -gt 3 ]; then
+        log "CRITICAL: Bootloop detected. Disabling module functions."
+        touch "$DISABLE_FLAG"
+        # Buat file disable untuk Magisk agar modul tidak load di boot berikutnya
+        touch "$MODDIR/disable"
+        exit 0
+    fi
 fi
 
-TRACKER="/data/local/tmp/waguri_boot_attempts"
-[ ! -f "$TRACKER" ] && echo "0" > "$TRACKER"
-COUNT=$(cat "$TRACKER")
-
-if [ "$COUNT" -gt 3 ]; then
-    touch /data/local/tmp/waguri_v2_disable
-    log "BOOTLOOP DETECTED: Module disabled for safety."
-    echo "0" > "$TRACKER"
-    exit 0
-fi
-
-echo $((COUNT + 1)) > "$TRACKER"
-log "Boot attempt: $((COUNT + 1))"
-
-# 2. EARLY STORAGE INIT
-# Make sure MediaProvider has high priority early
-MP_PID=$(pidof com.android.providers.media.module 2>/dev/null)
-if [ -z "$MP_PID" ]; then
-    MP_PID=$(pidof com.android.providers.media 2>/dev/null)
-fi
-if [ ! -z "$MP_PID" ]; then
-    echo -1000 > /proc/$MP_PID/oom_score_adj 2>/dev/null
-    log "MediaProvider boosted early (PID: $MP_PID)"
-fi
-
-# 3. EARLY CACHE DROP
-sync
-echo 3 > /proc/sys/vm/drop_caches 2>/dev/null
-log "Early cache drop done."
+# Fungsi pencegahan crash sistem dasar
+resetprop persist.device_config.global_flags.rescue_party_enabled false
+resetprop persist.sys.disable_rescue true

@@ -1,79 +1,51 @@
 #!/system/bin/sh
-# Castorice Thermal v1.3 - Overkill Edition
-# Focus: Total Thermal Bypass, Bind-Mount Binary Deletion, JEITA Disable
-
-MODDIR=${0%/*}
+# Castorice Thermal - Smart Fast Charge for Helio G88
 LOGFILE="/data/local/tmp/castorice_thermal.log"
 
 log() {
-    local msg="[CASTORICE-OVERKILL] $(date '+%m-%d %H:%M:%S') $*"
-    echo "$msg" >> "$LOGFILE"
+    echo "[$(date '+%m-%d %H:%M:%S')] $*" >> "$LOGFILE"
 }
 
-wait_boot() {
-    while [ "$(getprop sys.boot_completed)" != "1" ]; do sleep 5; done
+# MASALAH 3 FIX: Discovery loop untuk mencari path charger yang valid
+search_charger() {
+    CHG_PATHS="/sys/class/power_supply/mtk-master-charger /sys/devices/platform/charger /sys/class/power_supply/charger /sys/devices/platform/mt6357-charger.0"
+    for path in $CHG_PATHS; do
+        if [ -d "$path" ]; then
+            echo "$path"
+            return
+        fi
+    done
 }
 
-# --- SECTION 2: FORCE CHARGING (DEEP BYPASS) ---
 fix_charging() {
-    # 1. Reset ALL Cooling Devices (Force state 0)
+    local BASE_PATH=$(search_charger)
+    if [ -z "$BASE_PATH" ]; then
+        log "ERROR: No valid charger path found. Skipping fast charge fix."
+        return
+    fi
+
+    log "Valid charger path found: $BASE_PATH"
+    
+    # Reset Cooling Devices secara aman (Jangan terlalu sering)
     for cd in /sys/class/thermal/cooling_device*; do
-        [ -f "$cd/cur_state" ] && chmod 644 "$cd/cur_state" 2>/dev/null && echo 0 > "$cd/cur_state" 2>/dev/null
+        [ -f "$cd/cur_state" ] && echo 0 > "$cd/cur_state" 2>/dev/null
     done
 
-    # 2. Disable MTK PPM Thermal Policy
-    if [ -f "/proc/ppm/policy_status" ]; then
-        echo "5 0" > /proc/ppm/policy_status 2>/dev/null # Disable PPM_POLICY_THERMAL
-        log "PPM Thermal Policy disabled."
-    fi
-
-    # 3. Disable JEITA Protection (Sensitive charging limits)
-    if [ -f "/sys/devices/platform/charger/sw_jeita" ]; then
-        chmod 644 /sys/devices/platform/charger/sw_jeita 2>/dev/null
-        echo 0 > /sys/devices/platform/charger/sw_jeita 2>/dev/null
-    fi
-
-    # 4. Force MTK Charger Nodes
-    local chg_p="/sys/devices/platform/charger"
-    if [ -d "$chg_p" ]; then
-        for node in Pump_Express enable_sc input_current pdc_max_watt; do
-            if [ -f "$chg_p/$node" ]; then
-                chmod 644 "$chg_p/$node" 2>/dev/null
-                case "$node" in
-                    Pump_Express|enable_sc) echo 1 > "$chg_p/$node" 2>/dev/null ;;
-                    input_current) echo 5000 > "$chg_p/$node" 2>/dev/null ;;
-                    pdc_max_watt) echo 33000000 > "$chg_p/$node" 2>/dev/null ;;
-                esac
-            fi
-        done
-    fi
-
-    # 5. Xiaomi Specific Props
-    setprop persist.vendor.charge.fastcharge 1 2>/dev/null
-    setprop persist.vendor.smart_chg.turbo 1 2>/dev/null
-    echo 10 > /sys/class/thermal/thermal_message/sconfig 2>/dev/null
+    # Force Charge Limits
+    [ -f "$BASE_PATH/constant_charge_current" ] && echo 5000000 > "$BASE_PATH/constant_charge_current" 2>/dev/null
+    [ -f "$BASE_PATH/input_current_limit" ] && echo 3000000 > "$BASE_PATH/input_current_limit" 2>/dev/null
+    
+    # Xiaomi Fast Charge Props
+    setprop persist.vendor.charge.fastcharge 1
 }
 
-# --- MAIN ---
-wait_boot
-sleep 15
-log "===== Castorice Thermal v1.3.1 (Fixed) starting ====="
+while [ "$(getprop sys.boot_completed)" != "1" ]; do sleep 15; done
 
-fix_charging
+log "Castorice Thermal Active"
 
-# RAPID LOOP (Every 15 seconds to ensure no rollback)
-(
-    while true; do
-        # Force cooling devices to 0
-        for cd in /sys/class/thermal/cooling_device*; do
-            [ -f "$cd/cur_state" ] && echo 0 > "$cd/cur_state" 2>/dev/null
-        done
-        
-        # Keep input_suspend off
-        [ -f /sys/class/power_supply/battery/input_suspend ] && echo 0 > /sys/class/power_supply/battery/input_suspend 2>/dev/null
-        
-        sleep 15
-    done
-) &
-
-log "Thermal logic active. Watch the mA climb."
+# Loop dengan interval lebih manusiawi agar Battery IC tidak stress
+while true; do
+    fix_charging
+    # MASALAH 3 FIX: Interval diperlambat ke 60 detik
+    sleep 60
+done

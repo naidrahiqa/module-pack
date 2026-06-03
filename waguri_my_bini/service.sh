@@ -1,58 +1,48 @@
 #!/system/bin/sh
-# Waguri My Bini v1.0 - Stability & ROM Bug Fixes
-# Focus: PIN bugs, app crashes, rescue party, stability tweaks
-
+# Waguri My Bini - Master Stability Service
 MODDIR=${0%/*}
-LOGFILE="/data/local/tmp/waguri_my_bini.log"
+LOGFILE="/data/local/tmp/waguri_bini_service.log"
+DISABLE_FLAG="/data/local/tmp/waguri_bini_disable"
 
 log() {
-    local msg="[WAGURI-MY-BINI] $(date '+%m-%d %H:%M:%S') $*"
-    echo "$msg" >> "$LOGFILE"
+    echo "[$(date '+%m-%d %H:%M:%S')] $*" >> "$LOGFILE"
 }
 
 wait_boot() {
     while [ "$(getprop sys.boot_completed)" != "1" ]; do sleep 5; done
 }
 
-detect_info() {
-    DEVICE=$(getprop ro.product.model 2>/dev/null)
-    local mem_kb=$(grep MemTotal /proc/meminfo 2>/dev/null | awk '{print $2}')
-    TOTAL_RAM_MB=$((mem_kb / 1024))
-    
-    ENCORE_ACTIVE=0
-    [ -d "/data/adb/modules/encore" ] && ENCORE_ACTIVE=1
-}
-
-fix_memory() {
-    log "Applying memory tweaks..."
-    sync; echo 3 > /proc/sys/vm/drop_caches
-    local min_free=$((TOTAL_RAM_MB * 1000 / 200))
-    [ "$min_free" -lt 24000 ] && min_free=24000
-    [ "$min_free" -gt 96000 ] && min_free=96000
-    echo "$min_free" > /proc/sys/vm/min_free_kbytes
-    echo 80 > /proc/sys/vm/swappiness
-    echo 50 > /proc/sys/vm/vfs_cache_pressure
-}
-
-fix_crashes() {
-    log "Disabling Rescue Party & Crash Loop Remedy..."
-    resetprop persist.device_config.global_flags.rescue_party_enabled false
-    resetprop persist.sys.disable_rescue true
-    settings put global crash_loop_remedy_enabled 0 2>/dev/null
-}
-
+# Tunggu boot selesai
 wait_boot
 
-sleep 25
-log "===== Waguri My Bini v1.0 active ====="
-detect_info
-fix_crashes
+# Exit jika flag disable aktif dari post-fs-data
+[ -f "$DISABLE_FLAG" ] && exit 0
 
-if [ "$ENCORE_ACTIVE" -eq 0 ]; then
-    fix_memory
-else
-    log "Encore detected: Skipping memory tweaks."
-fi
+log "Waguri My Bini Service Active"
 
-# Start watchdog in background
+# MASALAH 4 FIX: Koordinasi MediaProvider Boost
+# Tunggu sampai MediaProvider benar-benar running sebelum di-boost
+MAX_RETRY=10
+RETRY=0
+while [ $RETRY -lt $MAX_RETRY ]; do
+    MP_PID=$(pidof com.android.providers.media.module)
+    if [ ! -z "$MP_PID" ]; then
+        log "MediaProvider found (PID: $MP_PID). Boosting OOM..."
+        echo -1000 > /proc/$MP_PID/oom_score_adj
+        break
+    fi
+    RETRY=$((RETRY + 1))
+    sleep 5
+done
+
+# Trigger Media Scan satu kali secara resmi
+sleep 5
+am broadcast -a android.intent.action.MEDIA_SCANNER_SCAN_FILE -d file:///sdcard >/dev/null 2>&1
+log "Final Media Scan triggered."
+
+# Reset boot tracker karena boot sukses
+rm -f /data/local/tmp/waguri_bini_boot_attempts
+log "Boot tracker reset. System stable."
+
+# Jalankan watchdog pendukung
 nohup sh "$MODDIR/watchdog.sh" >/dev/null 2>&1 &
