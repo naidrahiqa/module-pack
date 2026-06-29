@@ -8,6 +8,7 @@ const modules = [
   { name: 'kairitsu-safe', dir: 'kairitsu_safe', zip: 'kairitsu-safe-v1.0.0.zip' },
   { name: 'spoof_fierce', dir: 'spoof_fierce', zip: 'spoof_fierce-v1.0.0.zip' },
   { name: 'h_thermal', dir: 'h_thermal', zip: 'h_thermal-v1.0.0.zip' },
+  { name: 'game-perftune', dir: 'game_perftune', zip: 'game_perftune-v1.0.0.zip' },
 ];
 
 function walkDir(dir) {
