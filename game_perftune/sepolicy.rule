@@ -1,0 +1,6 @@
+allow shell system_server service_manager find
+allow shell proc_schedstat read
+allow shell sysfs_devices_system_cpu read
+allow shell sysfs write
+allow shell proc write
+allow shell cgroup_file read

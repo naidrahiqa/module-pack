@@ -1,6 +1,0 @@
-id=castorice-thermal
-name=Castorice Thermal
-version=v1.0-ksunext
-versionCode=1
-author=Gemini CLI
-description=Smart charging control limit & dynamic performance governor for Redmi 12 (Helio G88) HyperOS. v1.0: Smart charging limit, Screen ON dynamic performance unlock, Screen OFF deep sleep power saver.

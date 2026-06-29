@@ -1,2 +1,8 @@
 /bahan rujukan/
 /repo_temp/
+/node_modules/
+/.opencode/
+/zip_temp/
+*.zip
+*.log
+/package-lock.json

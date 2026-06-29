@@ -1,0 +1,6 @@
+id=hyacine-io
+name=Hyacine IO
+version=v1.3.0
+versionCode=1
+author=Naidrahiqa
+description=Storage I/O optimizer with FUSE passthrough, SD card management, and USB hotplug support

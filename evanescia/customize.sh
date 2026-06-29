@@ -1,27 +1,35 @@
-ui_print "==============================================="
-ui_print "              EVANESCIA                       "
-ui_print "       Memory Referee | Planarcadia           "
-ui_print "==============================================="
-ui_print "  v1.0-ksunext | Redmi 12 (Helio G88)       "
-ui_print "  Target: KernelSU Next                       "
-ui_print "  Companion: castorice / hyacine / waguri    "
-ui_print "==============================================="
+#!/system/bin/sh
+# Evanescia Memory — KernelSU Module Installer
+# Author: Naidrahiqa
 
-ui_print "- Setting script permissions..."
+ui_print ""
+ui_print "╔══════════════════════════════════════════════╗"
+ui_print "║          EVANESCIA MEMORY v1.1.0            ║"
+ui_print "║    VM Tuning · ZRAM · Memory Pressure       ║"
+ui_print "╚══════════════════════════════════════════════╝"
+ui_print ""
+
+ui_print "▸ Checking device compatibility..."
+
+RAM=$(awk '/MemTotal/{printf "%d", $2/1024}' /proc/meminfo)
+if [ "$RAM" -lt 4000 ]; then
+    ui_print "✗ Minimum 4GB RAM required (detected: ${RAM}MB)"
+    abort "Aborted."
+fi
+ui_print "  ✓ RAM: ${RAM}MB"
+
+ui_print "▸ Setting permissions..."
 set_perm "$MODPATH/post-fs-data.sh" 0 0 0755
 set_perm "$MODPATH/service.sh" 0 0 0755
+[ -f "$MODPATH/sepolicy.rule" ] && set_perm "$MODPATH/sepolicy.rule" 0 0 0644
 
-ui_print "- Referee schedules the match (pre-boot):"
-ui_print "  vm.swappiness -> 120 (150 on low-RAM)"
-ui_print "  vm.dirty_ratio 20 -> 15"
-ui_print "  vm.vfs_cache_pressure 100 -> 80 (locked)"
-ui_print "  vm.min_free_kbytes -> 128MB (locked)"
-ui_print "  zram: zstd/lz4 + tuned streams"
-ui_print "  I/O scheduler: mq-deadline for eMMC"
-
-ui_print "- Referee in arena (runtime):"
-ui_print "  Yellow card <15% avail: gentle reclaim"
-ui_print "  Red card <8% avail: drop page cache"
-ui_print "- v1.0: Force swappiness (120/150) & VM lock in service.sh"
-
-ui_print "- Disable: touch /data/local/tmp/evanescia_disable"
+ui_print ""
+ui_print "▸ Configuring system parameters..."
+ui_print "  • VM: swappiness=40, dirty_ratio=15, vfs_cache=80"
+ui_print "  • ZRAM: zstd algorithm, ncpu/2 compression threads"
+ui_print "  • I/O: mq-deadline scheduler for eMMC"
+ui_print "  • Memory: compact every 60min, drop_caches on critical"
+ui_print ""
+ui_print "▸ To disable: touch /data/local/tmp/evanescia_disable"
+ui_print ""
+ui_print "✓ Installation complete."

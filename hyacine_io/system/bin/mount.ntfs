@@ -1,0 +1,131 @@
+#!/system/bin/sh
+# Wrapper for mount.ntfs to use kernel ntfs/ntfs3 driver and avoid FUSE-SuSFS deadlocks.
+# v2.1: Added timeout, exFAT/FAT32 support, better logging
+
+LOGFILE="/data/local/tmp/ntfs_mount_wrapper.log"
+TIMEOUT=10
+
+log() {
+    echo "[$(date '+%m-%d %H:%M:%S')] $*" >> "$LOGFILE"
+}
+
+log "Args: $*"
+
+# Extract options, device, and mount point
+OPTS=""
+DEV=""
+MNT=""
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -o)
+            OPTS="$2"
+            shift 2
+            ;;
+        *)
+            if [ -z "$DEV" ]; then
+                DEV="$1"
+            else
+                MNT="$1"
+            fi
+            shift
+            ;;
+    esac
+done
+
+log "Parsed: dev=$DEV mnt=$MNT opts=$OPTS"
+
+# Detect filesystem type
+FSTYPE=""
+if command -v blkid >/dev/null 2>&1; then
+    FSTYPE=$(blkid -s TYPE -o value "$DEV" 2>/dev/null)
+    log "Filesystem detected: $FSTYPE"
+elif command -v file >/dev/null 2>&1; then
+    FSTYPE=$(file -s "$DEV" 2>/dev/null | grep -oE "NTFS|FAT|exFAT|ext4" | head -1)
+    log "Filesystem detected (file): $FSTYPE"
+fi
+
+# Clean up options that might be incompatible with kernel ntfs/ntfs3 driver
+CLEAN_OPTS=$(echo "$OPTS" | sed -E 's/,?shortname=[^,]+//g' | sed -E 's/,?dirsync//g' | sed -E 's/^,//' | sed -E 's/,$//')
+
+do_mount() {
+    local fstype=$1
+    local dev=$2
+    local mnt=$3
+    local opts=$4
+
+    if [ -n "$opts" ]; then
+        timeout "$TIMEOUT" mount -t "$fstype" -o "$opts" "$dev" "$mnt" 2>>"$LOGFILE"
+    else
+        timeout "$TIMEOUT" mount -t "$fstype" "$dev" "$mnt" 2>>"$LOGFILE"
+    fi
+    return $?
+}
+
+# ============================================================
+# NTFS MOUNT (try kernel drivers first)
+# ============================================================
+
+if [ "$FSTYPE" = "ntfs" ] || [ -z "$FSTYPE" ]; then
+    # Try 1: kernel ntfs3 driver (mainlined in 5.15, many custom kernels)
+    log "Trying ntfs3 kernel driver..."
+    if do_mount ntfs3 "$DEV" "$MNT" "$CLEAN_OPTS"; then
+        log "ntfs3 kernel mount successful!"
+        exit 0
+    fi
+
+    # Try 2: kernel ntfs driver (older fallback)
+    log "Trying ntfs kernel driver..."
+    if do_mount ntfs "$DEV" "$MNT" "$CLEAN_OPTS"; then
+        log "ntfs kernel mount successful!"
+        exit 0
+    fi
+
+    # Try 3: ntfs-3g userspace driver (if installed)
+    if command -v ntfs-3g >/dev/null 2>&1; then
+        log "Trying ntfs-3g..."
+        if timeout "$TIMEOUT" ntfs-3g -o "$CLEAN_OPTS" "$DEV" "$MNT" 2>>"$LOGFILE"; then
+            log "ntfs-3g mount successful!"
+            exit 0
+        fi
+    fi
+fi
+
+# ============================================================
+# exFAT / FAT32 MOUNT
+# ============================================================
+
+if [ "$FSTYPE" = "exfat" ] || [ "$FSTYPE" = "fat32" ] || [ "$FSTYPE" = "vfat" ]; then
+    log "Trying vfat/exfat kernel driver..."
+    if do_mount vfat "$DEV" "$MNT" "$CLEAN_OPTS"; then
+        log "vfat/exfat mount successful!"
+        exit 0
+    fi
+fi
+
+# ============================================================
+# EXT4 MOUNT
+# ============================================================
+
+if [ "$FSTYPE" = "ext4" ]; then
+    log "Trying ext4 kernel driver..."
+    if do_mount ext4 "$DEV" "$MNT" "$CLEAN_OPTS"; then
+        log "ext4 mount successful!"
+        exit 0
+    fi
+fi
+
+# ============================================================
+# FALLBACK: original mount.ntfs.real (FUSE)
+# ============================================================
+
+REAL_BIN="${0}.real"
+if [ -f "$REAL_BIN" ]; then
+    log "All kernel drivers failed. Falling back to FUSE mount.ntfs.real..."
+    exec "$REAL_BIN" -o "$OPTS" "$DEV" "$MNT"
+else
+    log "ERROR: All mount methods failed and no mount.ntfs.real found."
+    log "TIP: Install ntfs-3g or ensure kernel supports ntfs3/ntfs."
+    log "Detected filesystem: $FSTYPE"
+    exit 1
+fi

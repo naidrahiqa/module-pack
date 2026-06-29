@@ -1,6 +1,6 @@
-id=evanescia
-name=Evanescia
-version=v1.0-ksunext
+id=evanescia-memory
+name=Evanescia Memory
+version=v1.1.0
 versionCode=1
-author=Gemini CLI
-description=Memory Referee for Infinity X 3.10. v1.0: Active ZRAM VM tuning (swappiness=120, extra_free=65K, page-cluster=0) with 5m interval background locking mechanism.
+author=Naidrahiqa
+description=Advanced VM tuning, ZRAM optimization, and memory pressure management for Redmi 12

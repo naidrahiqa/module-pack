@@ -1,0 +1,5 @@
+allow ksu proc:file write
+allow ksu proc_swappiness:file write
+allow ksu proc_dirty:file write
+allow ksu proc_extra_free_kbytes:file write
+allow ksu proc_page_cluster:file write

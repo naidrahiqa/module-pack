@@ -1,0 +1,6 @@
+id=kairitsu-safe
+name=Kairitsu Safe
+version=v1.1.0
+versionCode=1
+author=Naidrahiqa
+description=System stability suite with bootloop protection, watchdog, and crash prevention

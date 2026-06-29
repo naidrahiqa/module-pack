@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Spoof Fierce</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0d0d0d;--card:#1a1a1a;--card2:#222;--border:#2a2a2a;--text:#e8e8e8;--dim:#777;--accent:#c77d4a;--green:#4caf50;--green-bg:rgba(76,175,80,.15);--red:#ef5350;--red-bg:rgba(239,83,80,.15);--hover:#252525}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:0;max-width:480px;margin:0 auto;padding-bottom:60px}
+.page{display:none;padding:16px}.page.active{display:block}
+.hdr{text-align:center;padding:14px 0 10px}.hdr h1{font-size:1.1rem;font-weight:700}.hdr h1 span{color:var(--accent)}.hdr p{color:var(--dim);font-size:.6rem;margin-top:2px}
+.status-card{background:linear-gradient(135deg,#1a1510,#1a1a1a);border:1px solid var(--border);border-radius:16px;padding:16px;margin:10px 0;display:flex;align-items:center;gap:14px}
+.status-icon{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#a0603a);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.status-icon svg{width:24px;height:24px;fill:#fff}
+.status-info h2{font-size:.85rem;font-weight:700}.status-info p{font-size:.55rem;color:var(--dim);margin-top:2px}
+.badge{display:inline-block;padding:3px 8px;border-radius:6px;font-size:.48rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-top:4px}.badge-on{background:var(--green-bg);color:var(--green)}.badge-off{background:var(--red-bg);color:var(--red)}
+.section-title{font-size:.55rem;color:var(--dim);text-transform:uppercase;letter-spacing:.8px;font-weight:700;margin:14px 0 6px;padding-left:4px}
+.info-row{display:flex;align-items:center;gap:10px;padding:11px;background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:5px}
+.info-row .icon{width:34px;height:34px;border-radius:9px;background:var(--card2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.info-row .icon svg{width:16px;height:16px;fill:var(--dim)}
+.info-row .text{flex:1}.info-row .label{font-size:.5rem;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;font-weight:600}.info-row .value{font-size:.72rem;font-weight:600;margin-top:1px}
+.nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;justify-content:center;z-index:50;max-width:480px;margin:0 auto}
+.nav-item{flex:1;padding:8px 0;text-align:center;cursor:pointer}.nav-item svg{width:20px;height:20px;fill:var(--dim)}.nav-item .label{font-size:.48rem;font-weight:600;margin-top:2px;color:var(--dim)}.nav-item.active svg{fill:var(--accent)}.nav-item.active .label{color:var(--accent)}
+.search-bar{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 14px;margin:10px 0;display:flex;align-items:center;gap:8px}.search-bar svg{width:16px;height:16px;fill:var(--dim);flex-shrink:0}.search-bar input{background:none;border:none;color:var(--text);font-size:.72rem;flex:1;outline:none;font-family:inherit}.search-bar input::placeholder{color:var(--dim)}
+.game-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:11px;margin:5px 0;display:flex;align-items:center;gap:10px}
+.app-icon{width:42px;height:42px;border-radius:11px;background:var(--card2);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+.app-icon img{width:100%;height:100%;object-fit:cover}
+.app-icon .fallback{font-size:.55rem;font-weight:700;color:var(--dim)}
+.game-info{flex:1;min-width:0}.game-info .name{font-size:.72rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.game-info .pkg{font-size:.48rem;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.game-badge{padding:3px 7px;border-radius:5px;font-size:.45rem;font-weight:700;text-transform:uppercase;flex-shrink:0;background:var(--green-bg);color:var(--green)}
+.game-rm{background:none;border:none;color:var(--red);cursor:pointer;padding:4px;flex-shrink:0}.game-rm svg{width:14px;height:14px;fill:var(--red)}
+.btn{padding:11px;border-radius:11px;border:none;font-size:.75rem;font-weight:600;cursor:pointer;width:100%}.btn-primary{background:var(--accent);color:#fff}.btn-ghost{background:var(--card);color:var(--text);border:1px solid var(--border)}
+.empty{text-align:center;padding:28px 16px;color:var(--dim);font-size:.7rem}.empty svg{width:40px;height:40px;fill:var(--dim);margin-bottom:8px;opacity:.5}
+.ov{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:100;display:none;flex-direction:column;max-width:480px;margin:0 auto}.ov.show{display:flex}
+.ov-hdr{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0}.ov-hdr h3{font-size:.85rem;font-weight:700;flex:1}.ov-hdr button{background:none;border:none;color:var(--text);cursor:pointer;padding:4px}.ov-hdr button svg{width:18px;height:18px;fill:var(--text)}
+.ov-body{flex:1;overflow-y:auto;padding:10px 16px;-webkit-overflow-scrolling:touch}
+.ov-footer{padding:10px 16px;border-top:1px solid var(--border);flex-shrink:0}
+.pick-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer}.pick-item:active{opacity:.7}
+.pick-icon{width:38px;height:38px;border-radius:9px;background:var(--card2);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}.pick-icon img{width:100%;height:100%;object-fit:cover}.pick-icon .fallback{font-size:.45rem;font-weight:700;color:var(--dim)}
+.pick-info{flex:1;min-width:0}.pick-info .n{font-size:.7rem;font-weight:600}.pick-info .p{font-size:.48rem;color:var(--dim);margin-top:1px}
+.pick-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center}.pick-check svg{width:12px;height:12px;fill:#fff;display:none}.pick-item.sel .pick-check{background:var(--accent);border-color:var(--accent)}.pick-item.sel .pick-check svg{display:block}.pick-item.done{opacity:.3}
+.dev-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:13px;margin:5px 0;cursor:pointer}.dev-card:active{background:var(--hover);border-color:var(--accent)}
+.dev-card .dn{font-size:.75rem;font-weight:700}.dev-card .dc{font-size:.52rem;color:var(--dim);margin-top:2px}.dev-card .df{font-size:.52rem;color:var(--accent);margin-top:1px;font-weight:600}
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:8px 16px;border-radius:10px;font-size:.65rem;font-weight:600;z-index:200;opacity:0;transition:opacity .2s;white-space:nowrap;max-width:90%}.toast.show{opacity:1}
+.log-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;max-height:250px;overflow:auto;font-size:.52rem;color:var(--dim);white-space:pre-wrap;font-family:monospace;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="page active" id="p-home">
+<div class="hdr"><h1>Spoof <span>Fierce</span></h1><p>Device spoof for game FPS unlock</p></div>
+<div class="status-card"><div class="status-icon"><svg viewBox="0 0 24 24"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg></div><div class="status-info"><h2 id="h-real-model">Loading...</h2><p id="h-real-sub">...</p><div class="badge" id="h-badge">...</div></div></div>
+<div class="section-title">Your Device</div><div id="h-real-info"></div>
+<div class="section-title" id="h-target-title">Spoof Target</div><div id="h-target-info"></div>
+<div class="section-title">Quick Actions</div>
+<div style="margin-top:6px"><button class="btn btn-primary" onclick="doApplyAll()">Apply All Games</button></div>
+<div style="margin-top:5px"><button class="btn btn-ghost" onclick="doRestore()">Restore Original</button></div>
+</div>
+<div class="page" id="p-games">
+<div class="hdr"><h1>My <span>Games</span></h1></div>
+<div class="search-bar"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><input type="text" id="gSearch" placeholder="Search apps..." oninput="renderGL()"></div>
+<div id="gList"></div>
+<div style="height:12px"></div>
+<button class="btn btn-primary" onclick="openPicker()">+ Add Game</button>
+</div>
+<div class="page" id="p-settings">
+<div class="hdr"><h1>Settings</h1></div>
+<div class="section-title">Device Profile</div><div id="s-dev"></div>
+<div style="margin-top:6px"><button class="btn btn-ghost" onclick="openDevPicker()">Change Target Device</button></div>
+<div class="section-title" style="margin-top:14px">Activity Log</div>
+<div class="log-box" id="s-log">Loading...</div>
+<div style="margin-top:6px"><button class="btn btn-ghost" onclick="ldLog()">Refresh Log</button></div>
+<div class="section-title" style="margin-top:14px">About</div>
+<div class="info-row"><div class="icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></div><div class="text"><div class="label">Version</div><div class="value">v1.0.0 (Zygisk)</div></div></div>
+<div class="info-row"><div class="icon"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div><div class="text"><div class="label">Author</div><div class="value">Naidrahiqa</div></div></div>
+</div>
+<div class="nav">
+<div class="nav-item active" onclick="go('home',this)"><svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg><div class="label">Home</div></div>
+<div class="nav-item" onclick="go('games',this)"><svg viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5S18.67 9 19.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg><div class="label">Games</div></div>
+<div class="nav-item" onclick="go('settings',this)"><svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg><div class="label">Settings</div></div>
+</div>
+<div class="ov" id="ov-pick">
+<div class="ov-hdr"><button onclick="mc()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button><h3>Add Game</h3></div>
+<div style="padding:8px 16px 0"><div class="search-bar" style="margin:0"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><input type="text" id="pSearch" placeholder="Search apps..." oninput="renderPL()"></div></div>
+<div class="ov-body" id="pList"></div>
+<div class="ov-footer"><button class="btn btn-primary" onclick="addSel()">Add Selected</button></div>
+</div>
+<div class="ov" id="ov-dev">
+<div class="ov-hdr"><button onclick="mc()"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button><h3>Change Device</h3></div>
+<div class="ov-body" id="dList"></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+var M='/data/adb/modules/spoof_fierce';
+var DEVICES=[
+{n:'Xiaomi 15 Ultra',c:'Snapdragon 8 Elite',mo:'25010PN30G',mf:'Xiaomi',b:'sun',hw:'sun',d:'xuanyuan',fps:120,mk:'Xiaomi 15 Ultra'},
+{n:'Samsung Galaxy S25 Ultra',c:'Snapdragon 8 Elite for Galaxy',mo:'SM-S938B',mf:'Samsung',b:'e3q',hw:'qcom',d:'e3q',fps:120,mk:'Galaxy S25 Ultra'},
+{n:'OnePlus 13',c:'Snapdragon 8 Elite',mo:'CPH2651',mf:'OnePlus',b:'sun',hw:'qcom',d:'houji',fps:120,mk:'OnePlus 13'},
+{n:'Google Pixel 9 Pro',c:'Tensor G4',mo:'GC3AE',mf:'Google',b:'zuma',hw:'zuma',d:'husky',fps:120,mk:'Pixel 9 Pro'},
+{n:'Xiaomi 14',c:'Snapdragon 8 Gen 3',mo:'23127PN0CC',mf:'Xiaomi',b:'kalama',hw:'qcom',d:'houji',fps:120,mk:'Xiaomi 14'},
+{n:'ASUS ROG Phone 9 Pro',c:'Snapdragon 8 Elite',mo:'ASUS_AI2501_C',mf:'ASUS',b:'sun',hw:'qcom',d:'artemi',fps:165,mk:'ROG Phone 9 Pro'},
+{n:'iQOO 13',c:'Snapdragon 8 Elite',mo:'V2408A',mf:'vivo',b:'sun',hw:'qcom',d:'kona',fps:120,mk:'iQOO 13'},
+{n:'Realme GT7 Pro',c:'Snapdragon 8 Elite',mo:'RMX5010',mf:'realme',b:'sun',hw:'qcom',d:'lemans',fps:120,mk:'Realme GT7 Pro'},
+{n:'Samsung Galaxy Z Fold6',c:'Snapdragon 8 Gen 3',mo:'SM-F956B',mf:'Samsung',b:'kalama',hw:'qcom',d:'q6q',fps:120,mk:'Galaxy Z Fold6'}
+];
+var S={packages:[]},allApps=[],sel={};
+
+var DEVICE_ICONS={
+  'Device':'<svg viewBox="0 0 24 24"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg>',
+  'Model':'<svg viewBox="0 0 24 24"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg>',
+  'Brand':'<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>',
+  'Chipset':'<svg viewBox="0 0 24 24"><path d="M22 9V7h-2V5c0-1.1-.9-2-2-2H6c-1.1 0-2 .9-2 2v2H2v2h2v2H2v2h2v2H2v2h2v2c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-2h2v-2h-2v-2h2v-2h-2V9h2zm-4 10H6V5h12v14z"/></svg>',
+  'Android':'<svg viewBox="0 0 24 24"><path d="M6 18c0 .55.45 1 1 1h1v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h2v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h1c.55 0 1-.45 1-1V8H6v10zM3.5 8C2.67 8 2 8.67 2 9.5v7c0 .83.67 1.5 1.5 1.5S5 17.33 5 16.5v-7C5 8.67 4.33 8 3.5 8zm17 0c-.83 0-1.5.67-1.5 1.5v7c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-7c0-.83-.67-1.5-1.5-1.5zm-4.97-5.84l1.3-1.3c.2-.2.2-.51 0-.71-.2-.2-.51-.2-.71 0l-1.48 1.48C13.85 1.23 12.95 1 12 1c-.96 0-1.86.23-2.66.63L7.85.15c-.2-.2-.51-.2-.71 0-.2.2-.2.51 0 .71l1.31 1.31C6.97 3.26 6 5.01 6 7h12c0-1.99-.97-3.75-2.47-4.84zM10 5H9V4h1v1zm5 0h-1V4h1v1z"/></svg>',
+  'Patch':'<svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>',
+  'Build':'<svg viewBox="0 0 24 24"><path d="M22 9V7h-2V5c0-1.1-.9-2-2-2H6c-1.1 0-2 .9-2 2v2H2v2h2v2H2v2h2v2H2v2h2v2c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-2h2v-2h-2v-2h2v-2h-2V9h2zM4 19V5h16v14H4z"/></svg>',
+  'Kernel':'<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>'
+};
+var SPOOF_ICONS={
+  'Target':'<svg viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5S18.67 9 19.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>',
+  'Model':'<svg viewBox="0 0 24 24"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg>',
+  'Brand':'<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>',
+  'Board':'<svg viewBox="0 0 24 24"><path d="M22 9V7h-2V5c0-1.1-.9-2-2-2H6c-1.1 0-2 .9-2 2v2H2v2h2v2H2v2h2v2H2v2h2v2c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-2h2v-2h-2v-2h2v-2h-2V9h2zm-4 10H6V5h12v14z"/></svg>',
+  'FPS':'<svg viewBox="0 0 24 24"><path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.7-1.6 8.1-4.9-1-.4 2 7 1.4z"/></svg>'
+};
+
+function ts(m){var t=document.getElementById('toast');t.textContent=m;t.className='toast show';setTimeout(function(){t.className='toast';},2000);}
+function mc(){document.querySelectorAll('.ov').forEach(function(o){o.classList.remove('show');});}
+function go(id,el){document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});document.getElementById('p-'+id).classList.add('active');el.classList.add('active');if(id==='games')renderGL();if(id==='settings'){ldDev();ldLog();}}
+function esc(s){return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;').replace(/"/g,'&quot;'):'';}
+
+function isValidPkg(p){return typeof p==='string'&&p.indexOf('.')>0&&p.indexOf(' ')===-1;}
+
+function iconUrl(pkg){
+  if(typeof ksu!=='undefined'&&typeof ksu.listPackages!=='undefined')return 'ksu://icon/'+pkg;
+  return '';
+}
+
+function fallbackIcon(el,pkg){
+  var s=pkg.split('.').pop();
+  el.innerHTML='<span class="fallback">'+s.substring(0,2).toUpperCase()+'</span>';
+}
+
+// ksu.exec with callback + timeout (matches Encore's tt() pattern exactly)
+var _cbIdx=0;
+function execCmd(cmd){
+  return new Promise(function(resolve){
+    if(typeof ksu==='undefined'||typeof ksu.exec==='undefined'){
+      resolve({errno:-1,stdout:'',stderr:'ksu.exec not available'});return;
+    }
+    var cbId='exec_callback_'+Date.now()+'_'+(_cbIdx++);
+    window[cbId]=function(errno,stdout,stderr){
+      delete window[cbId];
+      resolve({errno:errno,stdout:stdout,stderr:stderr});
+    };
+    try{ksu.exec(cmd,'{}',cbId);}
+    catch(e){delete window[cbId];resolve({errno:-1,stdout:'',stderr:e.message});}
+    // 15s timeout (some commands take longer)
+    setTimeout(function(){
+      if(window[cbId]){
+        delete window[cbId];
+        resolve({errno:-1,stdout:'',stderr:'execCmd timeout: '+cmd});
+      }
+    },15000);
+  });
+}
+
+function fetchJSON(file){
+  return fetch(file+'?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.json();}).catch(function(){return null;});
+}
+
+async function loadStatus(){
+  S=await fetchJSON('status.json');
+  if(!S)S={packages:[]};
+  if(!S.packages)S.packages=[];
+  S.packages=S.packages.filter(isValidPkg);
+
+  var on=S.active===true;
+  document.getElementById('h-badge').textContent=on?'ACTIVE':'STANDBY';
+  document.getElementById('h-badge').className='badge '+(on?'badge-on':'badge-off');
+
+  var real=S.real||{};
+  var displayName=real.marketname||real.model||'?';
+  document.getElementById('h-real-model').textContent=displayName;
+  var chip=real.chip||'';
+  document.getElementById('h-real-sub').textContent=(real.brand||'?')+' \u00b7 '+chip;
+
+  var realRows=[
+    {l:'Device',v:real.device,k:'Device'},
+    {l:'Model',v:real.model,k:'Model'},
+    {l:'Brand',v:real.brand,k:'Brand'},
+    {l:'Chipset',v:chip,k:'Chipset'},
+    {l:'Android',v:real.android,k:'Android'},
+    {l:'Security Patch',v:real.patch,k:'Patch'},
+    {l:'Build',v:real.build,k:'Build'},
+    {l:'Kernel',v:real.kernel,k:'Kernel'}
+  ];
+  var rh='';realRows.forEach(function(r){
+    if(!r.v)return;
+    var icon=DEVICE_ICONS[r.k]||'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="var(--dim)"/></svg>';
+    rh+='<div class="info-row"><div class="icon">'+icon+'</div><div class="text"><div class="label">'+r.l+'</div><div class="value">'+esc(r.v)+'</div></div></div>';
+  });
+  document.getElementById('h-real-info').innerHTML=rh;
+
+  var targetEl=document.getElementById('h-target-info');
+  var targetTitleEl=document.getElementById('h-target-title');
+  var hasTarget=!!(S.marketname||S.model);
+  if(!hasTarget){
+    targetTitleEl.style.display='none';
+    targetEl.style.display='none';
+  }else{
+    targetTitleEl.style.display='';
+    targetEl.style.display='';
+    var targetRows=[
+      {l:'Target',v:S.marketname||S.model,k:'Target'},
+      {l:'Model',v:S.model,k:'Model'},
+      {l:'Brand',v:S.brand,k:'Brand'},
+      {l:'Board',v:S.board,k:'Board'},
+      {l:'FPS',v:(S.fps||'?')+'fps',k:'FPS'}
+    ];
+    var th='';targetRows.forEach(function(r){
+      if(!r.v)return;
+      var icon=SPOOF_ICONS[r.k]||'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="var(--dim)"/></svg>';
+      th+='<div class="info-row"><div class="icon">'+icon+'</div><div class="text"><div class="label">'+r.l+'</div><div class="value">'+esc(r.v)+'</div></div></div>';
+    });
+    targetEl.innerHTML=th;
+  }
+}
+
+function renderGL(){
+  var el=document.getElementById('gList');var pkgs=S.packages||[];
+  var q=(document.getElementById('gSearch').value||'').toLowerCase();
+  var f=pkgs.filter(function(p){return !q||p.toLowerCase().indexOf(q)!==-1;});
+  if(!f.length){el.innerHTML='<div class="empty"><svg viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5S18.67 9 19.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg><br>'+(q?'No match':'No games added')+'</div>';return;}
+  el.innerHTML=f.map(function(p){
+    var s=p.split('.').pop();
+    var ico=iconUrl(p);
+    var imgHtml=ico?'<img src="'+ico+'" onerror="fallbackIcon(this,\''+esc(p)+'\')">':'<span class="fallback">'+s.substring(0,2).toUpperCase()+'</span>';
+    return '<div class="game-card"><div class="app-icon">'+imgHtml+'</div><div class="game-info"><div class="name">'+esc(s)+'</div><div class="pkg">'+esc(p)+'</div></div><div class="game-badge">ON</div><button class="game-rm" onclick="doRm(\''+esc(p)+'\')"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button></div>';
+  }).join('');
+}
+
+async function doApplyAll(){
+  if(!S.packages||!S.packages.length){ts('No games');return;}
+  for(var i=0;i<S.packages.length;i++){
+    await execCmd('sh '+M+'/api.sh apply '+S.packages[i]);
+  }
+  ts('Applied all');setTimeout(loadStatus,500);
+}
+async function doRestore(){
+  await execCmd('sh '+M+'/api.sh restore');
+  ts('Restored');setTimeout(loadStatus,500);
+}
+async function doRm(p){
+  if(!confirm('Remove '+p+'?'))return;
+  await execCmd('sh '+M+'/api.sh remove '+p);
+  ts('Removed');setTimeout(loadStatus,500);
+}
+
+async function listAppsKSU(){
+  try{
+    if(typeof ksu!=='undefined'&&typeof ksu.listUserPackages!=='undefined'){
+      var raw=ksu.listUserPackages();
+      var pkgs=typeof raw==='string'?JSON.parse(raw):raw;
+      if(pkgs&&pkgs.length){
+        var labels={};
+        try{
+          var chunk=50;
+          for(var i=0;i<pkgs.length;i+=chunk){
+            var slice=pkgs.slice(i,i+chunk);
+            var infoRaw=ksu.getPackagesInfo(JSON.stringify(slice));
+            var infos=typeof infoRaw==='string'?JSON.parse(infoRaw):infoRaw;
+            for(var j=0;j<infos.length;j++){
+              labels[infos[j].packageName]=infos[j].appLabel||infos[j].packageName;
+            }
+          }
+        }catch(e){}
+        return pkgs.map(function(p){return{pkg:p,name:labels[p]||p.split('.').pop()};});
+      }
+    }
+  }catch(e){}
+  return null;
+}
+
+async function listAppsShell(){
+  var result=[];
+  var res=await execCmd('pm list packages -3');
+  if(res.errno===0&&res.stdout){
+    var lines=res.stdout.split('\n');
+    for(var i=0;i<lines.length;i++){
+      var line=lines[i].trim();
+      if(line.indexOf('package:')===0){
+        var pkg=line.substring(8);
+        if(isValidPkg(pkg))result.push({pkg:pkg,name:pkg.split('.').pop()});
+      }
+    }
+  }
+  return result;
+}
+
+async function openPicker(){
+  sel={};document.getElementById('pSearch').value='';document.getElementById('ov-pick').classList.add('show');
+  document.getElementById('pList').innerHTML='<div class="empty">Loading apps...</div>';
+  allApps=await listAppsKSU();
+  if(!allApps||!allApps.length){
+    var apps=await fetchJSON('apps.json');
+    allApps=(apps&&apps.length)?apps:[];
+  }
+  if(!allApps||!allApps.length){
+    document.getElementById('pList').innerHTML='<div class="empty">Scanning via shell...</div>';
+    allApps=await listAppsShell();
+  }
+  renderPL();
+}
+function renderPL(){
+  var q=(document.getElementById('pSearch').value||'').toLowerCase();
+  var list=allApps.filter(function(a){return a.pkg&&(!q||a.name.toLowerCase().indexOf(q)!==-1||a.pkg.toLowerCase().indexOf(q)!==-1);});
+  var el=document.getElementById('pList');
+  if(!list.length){el.innerHTML='<div class="empty">No apps found</div>';return;}
+  el.innerHTML=list.slice(0,300).map(function(a){
+    var done=(S.packages||[]).indexOf(a.pkg)!==-1;var s=sel[a.pkg];
+    var ico=iconUrl(a.pkg);
+    var imgHtml=ico?'<img src="'+ico+'" onerror="fallbackIcon(this,\''+esc(a.pkg)+'\')">':'<span class="fallback">'+a.pkg.split('.').pop().substring(0,2).toUpperCase()+'</span>';
+    return '<div class="pick-item'+(done?' done':s?' sel':'')+'" onclick="'+(done?'':'tg(\''+esc(a.pkg)+'\')')+'"><div class="pick-icon">'+imgHtml+'</div><div class="pick-info"><div class="n">'+esc(a.name)+'</div><div class="p">'+esc(a.pkg)+'</div></div><div class="pick-check"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div></div>';
+  }).join('');
+}
+function tg(pkg){if((S.packages||[]).indexOf(pkg)!==-1)return;sel[pkg]=sel[pkg]?undefined:true;renderPL();}
+async function addSel(){
+  var pkgs=Object.keys(sel).filter(function(k){return sel[k];});
+  if(!pkgs.length){ts('No app selected');return;}
+  mc();
+  for(var i=0;i<pkgs.length;i++){
+    await execCmd('sh '+M+'/api.sh add '+pkgs[i]);
+  }
+  ts('Added '+pkgs.length);
+  await new Promise(function(r){setTimeout(r,500);});
+  loadStatus();
+}
+
+function openDevPicker(){
+  document.getElementById('ov-dev').classList.add('show');
+  document.getElementById('dList').innerHTML=DEVICES.map(function(d,i){return '<div class="dev-card" onclick="pickDev('+i+')"><div class="dn">'+d.n+'</div><div class="dc">'+d.c+' \u00b7 '+d.fps+'fps</div><div class="df">'+d.mk+'</div></div>';}).join('');
+}
+async function pickDev(i){
+  var d=DEVICES[i];if(!d)return;
+  var cfg={brand:d.mf,manufacturer:d.mf,model:d.mo,device:d.d,product:d.d,fingerprint:d.mf+'/'+d.d+'/'+d.d+':14/UP1A:release-keys',board:d.b,hardware:d.hw,marketname:d.mk,android_version:'14',sdk_int:34,fps:d.fps,packages:S.packages||[]};
+  await execCmd('sh '+M+'/api.sh set_device "'+JSON.stringify(cfg).replace(/"/g,'\\"')+'"');
+  mc();ts('Device: '+d.n);
+  await new Promise(function(r){setTimeout(r,500);});
+  loadStatus();
+}
+
+function ldDev(){
+  document.getElementById('s-dev').innerHTML='<div class="info-row" style="border-color:var(--accent)"><div class="icon"><svg viewBox="0 0 24 24"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z" fill="var(--accent)"/></svg></div><div class="text"><div class="label">Current Target</div><div class="value">'+esc(S.marketname||S.model||'?')+' \u00b7 '+(S.fps||'?')+'fps</div></div></div>';
+}
+
+async function ldLog(){
+  var res=await execCmd('sh '+M+'/api.sh log');
+  document.getElementById('s-log').textContent=res.stdout||'No log';
+}
+
+loadStatus();
+</script>
+</body>
+</html>

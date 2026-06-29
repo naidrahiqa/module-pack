@@ -1,199 +1,81 @@
 #!/system/bin/sh
-# Evanescia v1.0-ksunext - Memory Referee
-# The Planarcadia referee: sets the rules before the match starts.
-# Applies vm tuning, zram config, I/O scheduler — all in pre-boot phase.
+# Evanescia v1.0.0 - VM tuning + ZRAM + I/O scheduler
+# post-fs-data.sh: early boot, set before zygote
 
 MODDIR=${0%/*}
-LOGFILE="/data/local/tmp/evanescia.log"
-DISABLE_FLAG="/data/local/tmp/evanescia_disable"
-APPLIED_FLAG="/data/local/tmp/evanescia_applied"
+LOG="/data/local/tmp/evanescia.log"
+DIS="/data/local/tmp/evanescia_disable"
 
-log() {
-    echo "[$(date '+%m-%d %H:%M:%S')] $*" >> "$LOGFILE"
+log() { echo "[$(date '+%m-%d %H:%M:%S')] $*" >> "$LOG"; }
+
+wv() {
+    [ -w "$1" ] || return 1
+    echo "$2" > "$1" 2>/dev/null
+    local rv=$(cat "$1" 2>/dev/null)
+    [ "$rv" = "$2" ] && { log "  $3: OK"; return 0; }
+    log "  $3: FAIL"; return 1
 }
 
-# --- DEFAULT TUNING (8 GB devices) ---
-SWAPPINESS=120
-DIRTY_RATIO=15
-DIRTY_BG_RATIO=5
-VFS_CACHE_PRESSURE=80
-MIN_FREE_KB=131072
-EXTRA_FREE_KB=65536
+[ -f "$DIS" ] && { log "Disabled."; exit 0; }
 
-# --- DISABLE CHECK ---
-if [ -f "$DISABLE_FLAG" ]; then
-    log "Module disabled via flag. Evanescia stands down."
-    exit 0
+log "=== Evanescia Memory v1.1.0 ==="
+
+# RAM detection
+TOTAL_KB=$(awk '/^MemTotal:/{print $2}' /proc/meminfo); TOTAL_KB=${TOTAL_KB:-0}
+TOTAL_MB=$((TOTAL_KB / 1024))
+
+# Tuning values — conservative to avoid reclaim storms
+# min_free: 8GB=24MB, 6GB=20MB, 4GB=16MB (stock Android ~18MB)
+# extra_free: fraction of min_free, NOT additive with min_free
+SW=40; DR=15; DBR=5; VP=80; MFK=24576; EFK=4096
+if [ "$TOTAL_MB" -lt 4096 ]; then
+    SW=60; MFK=16384; EFK=2048
+elif [ "$TOTAL_MB" -lt 6144 ]; then
+    MFK=20480; EFK=3072
 fi
 
-log "==============================================="
-log "  Evanescia v1.0.1-ksunext | Referee Active   "
-log "==============================================="
+# Phase 1: VM
+log "--- VM ---"
+wv /proc/sys/vm/swappiness "$SW" "swappiness"
+wv /proc/sys/vm/dirty_ratio "$DR" "dirty_ratio"
+wv /proc/sys/vm/dirty_background_ratio "$DBR" "dirty_bg_ratio"
+wv /proc/sys/vm/vfs_cache_pressure "$VP" "vfs_cache_pressure"
+wv /proc/sys/vm/min_free_kbytes "$MFK" "min_free_kbytes"
+wv /proc/sys/vm/extra_free_kbytes "$EFK" "extra_free_kbytes"
+wv /proc/sys/vm/page-cluster 0 "page-cluster"
 
-# Detect total RAM
-total_kb=$(awk '/^MemTotal:/ {print $2}' /proc/meminfo)
-total_mb=$((total_kb / 1024))
-log "Total RAM: ${total_mb} MB"
-
-# Scale-down tuning for low-RAM devices
-if [ "$total_mb" -lt 4096 ]; then
-    SWAPPINESS=150
-    MIN_FREE_KB=65536
-    EXTRA_FREE_KB=32768
-    log "Low-RAM arena. Adjusted tuning for ${total_mb}MB."
-fi
-
-# ============================================================
-# PHASE 1: VIRTUAL MEMORY SCHEDULE
-# ============================================================
-log "--- Phase 1: vm scheduling ---"
-
-# swappiness: 0=never swap (risky), 100=swap aggressively
-# Default 60 too aggressive for AOSP. 40 keeps anon hot longer.
-[ -w /proc/sys/vm/swappiness ] && {
-    echo $SWAPPINESS > /proc/sys/vm/swappiness
-    log "  vm.swappiness = $SWAPPINESS (was 60)"
-}
-
-# dirty_ratio: % of RAM allowed dirty before sync write
-# Default 20 = sync stalls. 15 = smoother UI writes.
-[ -w /proc/sys/vm/dirty_ratio ] && {
-    echo $DIRTY_RATIO > /proc/sys/vm/dirty_ratio
-    log "  vm.dirty_ratio = $DIRTY_RATIO"
-}
-
-# dirty_background_ratio: start writeback at this %
-[ -w /proc/sys/vm/dirty_background_ratio ] && {
-    echo $DIRTY_BG_RATIO > /proc/sys/vm/dirty_background_ratio
-    log "  vm.dirty_background_ratio = $DIRTY_BG_RATIO"
-}
-
-# vfs_cache_pressure: tendency to reclaim inode/dentry cache
-# Default 100 = aggressive reclaim. 80 = keep cache for app restarts.
-[ -w /proc/sys/vm/vfs_cache_pressure ] && {
-    echo $VFS_CACHE_PRESSURE > /proc/sys/vm/vfs_cache_pressure
-    log "  vm.vfs_cache_pressure = $VFS_CACHE_PRESSURE"
-}
-
-# min_free_kbytes: always keep this much free for atomic allocs
-# Default ~64MB on 8GB. 128MB helps kswapd start earlier.
-[ -w /proc/sys/vm/min_free_kbytes ] && {
-    echo $MIN_FREE_KB > /proc/sys/vm/min_free_kbytes
-    log "  vm.min_free_kbytes = ${MIN_FREE_KB} KB"
-}
-
-# extra_free_kbytes: extra cushion beyond min_free
-[ -w /proc/sys/vm/extra_free_kbytes ] && {
-    echo $EXTRA_FREE_KB > /proc/sys/vm/extra_free_kbytes
-    log "  vm.extra_free_kbytes = ${EXTRA_FREE_KB} KB"
-}
-
-# page-cluster: controls page read-ahead from swap (0 is optimal for ZRAM)
-[ -w /proc/sys/vm/page-cluster ] && {
-    echo 0 > /proc/sys/vm/page-cluster
-    log "  vm.page-cluster = 0"
-}
-
-# ============================================================
-# PHASE 2: ZRAM COMPRESSION
-# ============================================================
-log "--- Phase 2: zram compression ---"
-ZRAM_DEV=$(ls /sys/block/ 2>/dev/null | grep -E "^zram" | head -1)
-if [ -n "$ZRAM_DEV" ] && [ -f /sys/block/$ZRAM_DEV/comp_algorithm ]; then
-    avail_algo=$(cat /sys/block/$ZRAM_DEV/comp_algorithm)
-    # Detect if zram has data (algorithm can only change when empty)
-    if [ -f /sys/block/$ZRAM_DEV/mm_stat ]; then
-        used_bytes=$(awk '{print $1}' /sys/block/$ZRAM_DEV/mm_stat 2>/dev/null)
+# Phase 2: ZRAM
+log "--- ZRAM ---"
+ZD=$(ls /sys/block/ 2>/dev/null | grep "^zram" | head -1)
+if [ -n "$ZD" ] && [ -f "/sys/block/$ZD/comp_algorithm" ]; then
+    ALGO=$(cat "/sys/block/$ZD/comp_algorithm" 2>/dev/null)
+    USED=$(awk '{print $1}' "/sys/block/$ZD/mm_stat" 2>/dev/null)
+    USED=${USED:-0}
+    if [ "$USED" -gt 0 ] 2>/dev/null; then
+        CUR=$(echo "$ALGO" | grep -oE '\[[^]]+\]' | tr -d '[]')
+        log "  $ZD in use ($USED bytes) — algo: $CUR (locked)"
     else
-        used_bytes=999999
+        echo "$ALGO" | grep -q "zstd" && echo zstd > "/sys/block/$ZD/comp_algorithm" 2>/dev/null && log "  $ZD: zstd"
+        NCPU=$(grep -c ^processor /proc/cpuinfo 2>/dev/null); NCPU=${NCPU:-4}
+        STREAMS=$((NCPU / 2)); [ "$STREAMS" -lt 1 ] && STREAMS=1
+        echo "$STREAMS" > "/sys/block/$ZD/max_comp_streams" 2>/dev/null
+        log "  $ZD streams: $STREAMS"
     fi
-
-    if [ "${used_bytes:-0}" -gt 0 ] 2>/dev/null; then
-        # zram in use, can't change algo/streams
-        current=$(echo "$avail_algo" | tr -d '[]' | awk '{print $1}')
-        log "  $ZRAM_DEV in use (${used_bytes} bytes) — algo/streams locked"
-        log "  Active: $current (tune in init.rc for boot-time change)"
-    else
-        # zram empty, safe to change
-        if echo "$avail_algo" | grep -q "zstd"; then
-            if echo zstd > /sys/block/$ZRAM_DEV/comp_algorithm 2>/dev/null; then
-                log "  $ZRAM_DEV algo: zstd (best ratio)"
-            else
-                log "  $ZRAM_DEV algo: write failed"
-            fi
-        elif echo "$avail_algo" | grep -q "lz4"; then
-            if echo lz4 > /sys/block/$ZRAM_DEV/comp_algorithm 2>/dev/null; then
-                log "  $ZRAM_DEV algo: lz4 (fast)"
-            else
-                log "  $ZRAM_DEV algo: write failed"
-            fi
-        else
-            current=$(echo "$avail_algo" | tr -d '[]' | awk '{print $1}')
-            log "  $ZRAM_DEV algo: $current (no preferred available)"
-        fi
-
-        # Streams: ncpu/2 is sweet spot (too many = contention, too few = bottleneck)
-        ncpu=$(grep -c ^processor /proc/cpuinfo 2>/dev/null)
-        [ -z "$ncpu" ] || [ "$ncpu" -lt 2 ] && ncpu=4
-        streams=$((ncpu / 2))
-        [ "$streams" -lt 1 ] && streams=1
-        if [ -f /sys/block/$ZRAM_DEV/max_comp_streams ]; then
-            if echo $streams > /sys/block/$ZRAM_DEV/max_comp_streams 2>/dev/null; then
-                log "  $ZRAM_DEV streams: $streams (cpus=$ncpu)"
-            else
-                log "  $ZRAM_DEV streams: write failed"
-            fi
-        fi
-    fi
-else
-    log "  No zram device found (skipped)"
 fi
 
-# ============================================================
-# PHASE 3: I/O SCHEDULER PER DEVICE
-# ============================================================
-# v1.0.1: Trust kernel's compiled-in schedulers. If preferred is not in
-# the kernel, write will silently fail and current remains. Just check
-# the file content to see what's available before attempting.
-log "--- Phase 3: I/O scheduler ---"
-for dev in /sys/block/mmcblk* /sys/block/sd*; do
+# Phase 3: I/O scheduler
+log "--- I/O ---"
+for dev in /sys/block/mmcblk*; do
     [ ! -d "$dev" ] && continue
-    devname=$(basename "$dev")
-    sched_file="$dev/queue/scheduler"
-    [ ! -f "$sched_file" ] && continue
-
-    # File format: [active] available1 available2 ...
-    sched_content=$(cat "$sched_file" 2>/dev/null)
-    current_sched=$(echo "$sched_content" | tr -d '[]' | awk '{print $1}')
-
-    case "$devname" in
-        mmcblk*|mmcblk*rpmb|mmcblk*boot*)
-            # eMMC: mq-deadline is the sweet spot for budget SoC
-            preferred="mq-deadline"
-            ;;
-        sd*)
-            # SD card: bfq gives better fairness for removable media
-            preferred="bfq"
-            [ "$preferred" = "bfq" ] && ! echo "$sched_content" | grep -q "bfq" && preferred="mq-deadline"
-            ;;
-        *)
-            preferred="mq-deadline"
-            ;;
-    esac
-
-    if [ "$current_sched" = "$preferred" ]; then
-        log "  $devname: $current_sched (optimal)"
-    else
-        # Try to set preferred. Kernel will reject if not available.
-        if echo "$preferred" > "$sched_file" 2>/dev/null; then
-            # Verify the change took effect
-            new_sched=$(cat "$sched_file" 2>/dev/null | tr -d '[]' | awk '{print $1}')
-            log "  $devname: $current_sched -> $new_sched"
-        else
-            log "  $devname: $current_sched (no change - $preferred unavailable)"
-        fi
-    fi
+    DN=$(basename "$dev"); case "$DN" in mmcblk*boot*|mmcblk*rpmb) continue;; esac
+    SF="$dev/queue/scheduler"; [ ! -f "$SF" ] && continue
+    grep -q "mq-deadline" "$SF" 2>/dev/null && ! grep -q "\[mq-deadline\]" "$SF" 2>/dev/null && echo mq-deadline > "$SF" 2>/dev/null
 done
 
-log "--- Referee schedule set. Match can begin. ---"
-touch "$APPLIED_FLAG"
+# Re-lock 1x (fight ROM init overrides, skip 3x to save boot time)
+# No sleep needed — ROM init hasn't overwritten yet at this point
+wv /proc/sys/vm/swappiness "$SW" "relock swappiness"
+wv /proc/sys/vm/vfs_cache_pressure "$VP" "relock vfs_cache_pressure"
+wv /proc/sys/vm/page-cluster 0 "relock page-cluster"
+
+log "=== post-fs-data done ==="

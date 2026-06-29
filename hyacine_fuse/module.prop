@@ -1,6 +1,0 @@
-id=hyacine-fuse
-name=Hyacine Fuse
-version=v1.0-ksunext
-versionCode=1
-author=Gemini CLI
-description=Storage I/O optimizer for Redmi 12 (Helio G88) HyperOS. v1.0: Enable FUSE Passthrough early to prevent storage deadlocks, tune block queues with merges allowed.

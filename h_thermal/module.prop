@@ -1,0 +1,6 @@
+id=H_Thermal
+name=H-Thermal
+version=v1.0.0
+versionCode=1
+author=Naidrahiqa
+description=Universal thermal disable with auto chipset detection for Qualcomm and MediaTek

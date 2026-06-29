@@ -1,0 +1,19 @@
+{
+    "brand": "Xiaomi",
+    "manufacturer": "Xiaomi",
+    "model": "25010PN30G",
+    "device": "xuanyuan",
+    "product": "xuanyuan",
+    "fingerprint": "Xiaomi/xuanyuan/xuanyuan:14/UKQ1.231003.002/V816.0.24.0.UNACNXM:user/release-keys",
+    "board": "sun",
+    "hardware": "qcom",
+    "marketname": "Xiaomi 15 Ultra",
+    "android_version": "14",
+    "sdk_int": 34,
+    "fps": 120,
+    "packages": [
+        "com.mobile.legends",
+        "com.levelinfinite.sgameGlobal",
+        "com.tencent.tmgp.sgame"
+    ]
+}

@@ -1,0 +1,4 @@
+allow ksu proc:file write
+allow ksu default_prop:property_service set
+allow ksu cgroup:file write
+allow ksu cgroup_v2:file write
