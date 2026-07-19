@@ -1,0 +1,6 @@
+id=volume_steps
+name=Volume Steps Enhancer
+version=v1.0.0
+versionCode=1
+author=Naidrahiqa
+description=More volume steps for finer volume control (15 steps instead of 7)

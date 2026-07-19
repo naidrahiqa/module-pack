@@ -1,0 +1,10 @@
+persist.vendor.camera.HAL3.enable=1
+persist.vendor.camera.jpeg.quality=100
+persist.vendor.camera.exif.enable=1
+persist.vendor.camera.stats.test=0
+ro.vendor.camera.cxt=1
+persist.vendor.camera.fdimgproc=0
+persist.vendor.camera.framememode=0
+persist.vendor.camera.raw=1
+persist.vendor.camera.ae.lock=0
+persist.vendor.camera.awb.lock=0

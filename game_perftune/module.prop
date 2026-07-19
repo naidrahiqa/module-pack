@@ -1,6 +1,6 @@
 id=game-perftune
 name=Game PerfTune
-version=v1.0.0
+version=v2.0.0
 versionCode=1
 author=Naidrahiqa
-description=Per-game CPU governor, GPU boost, network latency, and I/O priority tuning for Helio G88
+description=Per-game GPU boost, network latency, and CPU pinning for Helio G88

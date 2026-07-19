@@ -1,6 +1,6 @@
 # AGENTS.md — CustomROM-Fix
 
-KernelSU Next module collection untuk **Redmi 12 (Helio G88)** — HyperOS & custom ROM. Shell scripts, no build system. Flash via KSU Manager.
+KernelSU Next module collection untuk **Redmi 12 (Helio G88)** — HyperOS & custom ROM. Shell scripts + C++ native daemons. Flash via KSU Manager.
 
 ## Project Layout
 
@@ -38,14 +38,19 @@ CustomROM-Fix/
 │   ├── module.prop
 │   ├── post-fs-data.sh        # Boot props + real device capture
 │   ├── service.sh             # Runtime verify + WebUI data gen
-│   ├── api.sh                 # WebUI backend (status/scan/add/remove/apply)
+│   ├── api.sh                 # WebUI backend (calls native spoof_api)
 │   ├── SpoofFierce.json       # Device profiles + game packages
 │   ├── src/
 │   │   ├── spoof_module.cpp   # Zygisk native hook (JNI + COW props)
+│   │   ├── api_handler.c      # Native API (JSON parser + actions)
+│   │   ├── json_lite.c/.h     # Lightweight JSON parser
 │   │   ├── zygisk.hpp
-│   │   └── CMakeLists.txt
+│   │   ├── CMakeLists.txt     # Builds both .so and executable
+│   │   └── build-ndk.bat      # Windows NDK build script
 │   ├── lib/arm64-v8a/
 │   │   └── libspoof_fierce.so
+│   ├── bin/
+│   │   └── spoof_api          # Native API handler executable
 │   ├── webroot/
 │   │   ├── index.html         # Dark theme WebUI
 │   │   ├── status.json        # Generated at boot
@@ -55,17 +60,28 @@ CustomROM-Fix/
 │   ├── customize.sh
 │   ├── sepolicy.rule
 │   └── META-INF/
-├── h_thermal/                 # Thermal disable + PPM unlock + CPU max freq
+├── h_thermal/                 # Thermal disable + PPM unlock
 │   ├── module.prop
-│   ├── service.sh
+│   ├── post-fs-data.sh        # Zero thermal props at boot
+│   ├── service.sh             # Thermal zone + PPM + GPU disable
+│   ├── sepolicy.rule          # SELinux rules for thermal sysfs
 │   ├── customize.sh
-│   ├── sepolicy.rule
 │   └── META-INF/
 ├── game_perftune/             # Per-game GPU boost + network + CPU pinning
 │   ├── module.prop
 │   ├── post-fs-data.sh        # Boot-time base tuning (GPU + TCP buffers)
-│   ├── service.sh             # Game detection daemon (polling 3s)
+│   ├── service.sh             # Thin launcher for native daemon
 │   ├── game_detect.sh         # Manual control (start/stop/add/remove/list)
+│   ├── src/
+│   │   ├── game_perftune.c    # Main native daemon
+│   │   ├── game_list.c/.h     # Game package list management
+│   │   ├── gpu_tuner.c/.h     # GPU sysfs tuning
+│   │   ├── net_tuner.c/.h     # Network sysfs tuning
+│   │   ├── cpu_pinner.c/.h    # CPU cpuset pinning
+│   │   ├── CMakeLists.txt     # Build config
+│   │   └── build-ndk.bat      # Windows NDK build script
+│   ├── lib/arm64-v8a/
+│   │   └── game_perftune      # Native daemon executable
 │   ├── customize.sh
 │   ├── sepolicy.rule
 │   └── META-INF/
@@ -76,12 +92,12 @@ CustomROM-Fix/
 
 | Module | ID | Version | Key Changes |
 |--------|-----|---------|-------------|
-| Evanescia Memory | `evanescia-memory` | v1.1.0 | min_free=24MB (was 128MB), compact every 60min |
-| Hyacine IO | `hyacine-io` | v1.3.0 | Merged SD card scan from customrom-fix |
-| Kairitsu Safe | `kairitsu-safe` | v1.1.0 | Bootloop protection + watchdog |
-| Spoof Fierce | `spoof_fierce` | v1.0.0 | Zygisk native hook, WebUI, extract_pkgs fixed |
-| H-Thermal | `H_Thermal` | v1.0.0 | PPM disable + CPU max freq + thermal zones |
-| Game PerfTune | `game-perftune` | v1.0.0 | GPU boost + network latency + CPU pinning |
+| Evanescia Memory | `evanescia-memory` | v1.2.0 | PSI fix, SELinux rules, write logging |
+| Hyacine IO | `hyacine-io` | v1.4.0 | USB detection fix, timeout, FUSE verify |
+| Kairitsu Safe | `kairitsu-safe` | v1.2.0 | D-state count fix, Rescue Party verify |
+| Spoof Fierce | `spoof_fierce` | v2.0.0 | C++ native API, JSON validation, tr fix |
+| H-Thermal | `H_Thermal` | v1.1.0 | grep -oP fix, sepolicy, readback verify |
+| Game PerfTune | `game-perftune` | v2.0.0 | Full C++ rewrite, META-INF, cpuset fix |
 
 ## Shell Scripting Rules (Critical)
 
@@ -143,6 +159,15 @@ These are hard-won lessons from debugging on-device:
 
 ### NEVER strip quotes from JSON values you need to re-embed
 - `tr -d '"'` on extracted values produces invalid JSON when re-inserting
+
+### NEVER use `grep -oP` (PCRE) on Android
+- Android's toybox/busybox grep does NOT support `-P` (Perl regex)
+- Use `sed` instead: `grep -oP '\[.*?\]'` → `sed 's/.*\[\(.*\)\].*/\1/'`
+- Caused h_thermal thermal props never zeroed on 2026-07-19
+
+### Use `tr -d '\n\r'` not `tr -d '\n' '\r'`
+- Two arguments to `tr -d` deletes chars from FIRST string only. `\r` is NOT removed
+- Caused Windows-edited configs corrupting spoofed props on 2026-07-19
 
 ## Cross-Module Conflicts
 

@@ -1,0 +1,6 @@
+id=network_fix
+name=Network Optimization
+version=v1.0.0
+versionCode=1
+author=Naidrahiqa
+description=Network performance optimization with TCP buffer tuning and DNS cache

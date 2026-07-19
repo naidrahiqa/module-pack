@@ -1,5 +1,5 @@
 #!/system/bin/sh
-# Kairitsu Safe v1.0.0 - Crash prevention + memory monitor
+# Kairitsu Safe v1.2.0 - Crash prevention + memory monitor
 
 MODDIR=${0%/*}
 LOG="/data/local/tmp/kairitsu_service.log"
@@ -12,7 +12,7 @@ sleep 5
 
 [ -f "$DIS" ] && { log "Disabled."; exit 0; }
 
-log "=== Kairitsu Safe v1.1.0 ==="
+log "=== Kairitsu Safe v1.2.0 ==="
 
 # Rescue Party disable
 resetprop persist.device_config.global_flags.rescue_party_enabled false 2>/dev/null
@@ -21,6 +21,10 @@ settings put global device_config/global_flags/rescue_party_enabled false 2>/dev
 settings put global crash_loop_remedy_enabled 0 2>/dev/null
 settings put global development_settings_enabled 1 2>/dev/null
 settings put secure adb_enabled 1 2>/dev/null
+
+# Verify Rescue Party disable
+RP_VAL=$(getprop persist.device_config.global_flags.rescue_party_enabled 2>/dev/null)
+[ "$RP_VAL" = "false" ] && log "Rescue Party: DISABLED (verified)" || log "Rescue Party: verify failed (got: $RP_VAL)"
 
 # Storage fix
 am broadcast -a android.intent.action.MEDIA_MOUNTED -d file:///storage/emulated/0 -p com.android.providers.media.module --user 0 >/dev/null 2>&1

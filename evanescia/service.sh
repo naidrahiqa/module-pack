@@ -1,5 +1,5 @@
 #!/system/bin/sh
-# Evanescia v1.0.0 - Memory monitor (runtime)
+# Evanescia v1.2.0 - Memory monitor (runtime)
 # Monitors memory pressure, enforces VM tuning
 
 MODDIR=${0%/*}
@@ -21,7 +21,7 @@ sleep 10
 
 [ -f "$DIS" ] && { log "Disabled."; exit 0; }
 
-log "=== Evanescia Runtime v1.1.0 ==="
+log "=== Evanescia Runtime v1.2.0 ==="
 
 # Detect RAM once
 TOTAL_KB=$(awk '/^MemTotal:/{print $2}' /proc/meminfo); TOTAL_KB=${TOTAL_KB:-0}
@@ -64,7 +64,7 @@ while true; do
     if [ "$CYCLE" -ge 6 ]; then
         CYCLE=0
         LOAD=$(awk '{print int($1)}' /proc/loadavg 2>/dev/null); LOAD=${LOAD:-0}
-        PSI=$(awk -F'avg10=' '/^full/{split($2,a," ");printf "%d",a[1]}' /proc/pressure/memory 2>/dev/null); PSI=${PSI:-0}
-        [ "$LOAD" -le 3 ] && [ "$PSI" -gt 10 ] && echo 1 > /proc/sys/vm/compact_memory 2>/dev/null
+        PSI=$(awk -F'avg10=' '/^full/{split($2,a," ");printf "%d",a[1]*10}' /proc/pressure/memory 2>/dev/null); PSI=${PSI:-0}
+        [ "$LOAD" -le 3 ] && [ "$PSI" -gt 50 ] && echo 1 > /proc/sys/vm/compact_memory 2>/dev/null && log "compact_memory triggered (PSI=$PSI)"
     fi
 done

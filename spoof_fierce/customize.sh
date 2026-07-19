@@ -140,6 +140,7 @@ ui_print "▸ Setting permissions..."
 set_perm "$MODPATH/service.sh" 0 0 0755
 set_perm "$MODPATH/post-fs-data.sh" 0 0 0755
 [ -f "$MODPATH/api.sh" ] && set_perm "$MODPATH/api.sh" 0 0 0755
+[ -f "$MODPATH/bin/spoof_api" ] && set_perm "$MODPATH/bin/spoof_api" 0 0 0755
 [ -d "$MODPATH/webroot" ] && chmod -R 755 "$MODPATH/webroot" 2>/dev/null
 
 # Set .so permissions

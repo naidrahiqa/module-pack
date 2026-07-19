@@ -1,0 +1,10 @@
+persist.gps.glonass.enable=1
+persist.gps.beidou.enable=1
+persist.gps.galileo.enable=1
+persist.gps.qss.enable=1
+persist.gps.solomon.enable=1
+ro.location.gps=NLP
+persist.location.mode=high_accuracy
+gps.force_enable=true
+persist.vendor.gps.gps_ref_location=1
+persist.vendor.gps.gps_rst_mode=1

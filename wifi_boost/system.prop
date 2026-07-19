@@ -1,0 +1,8 @@
+persist.vendor.wifi.optimized=1
+persist.vendor.wifi.patch=1
+persist.vendor.wifi.framework.scan.interval=15000
+persist.vendor.wifi.hotspot.scan.interval=10000
+ro.vendor.wifi.wifi_chip=MT6631
+persist.vendor.wifi.WFD.enabled=1
+persist.vendor.wifi.direct.dbus=1
+persist.vendor.wifi.connsys.dedicated.memory=1

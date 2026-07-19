@@ -1,5 +1,5 @@
 #!/system/bin/sh
-# Spoof Fierce v1.0.0 — Boot-time props (Zygisk fallback)
+# Spoof Fierce v2.0.0 — Boot-time props (Zygisk fallback)
 # Zygisk handles per-game spoof; this sets system-wide props at boot
 MODDIR=${0%/*}
 LOG="/data/local/tmp/spoof_fierce.log"
@@ -38,7 +38,7 @@ T=0
 while [ ! -x "$RP" ]; do sleep 1; T=$((T + 1)); [ "$T" -gt 30 ] && exit 0; done
 
 log() { echo "[$(date '+%m-%d %H:%M:%S')] $*" >> "$LOG"; }
-log "=== Spoof Fierce v1.0.0 (Zygisk) ==="
+log "=== Spoof Fierce v2.0.0 (Zygisk) ==="
 
 # Simple JSON parser for shell (no jq dependency)
 json_val() {
@@ -52,7 +52,7 @@ json_int() {
 
 # Read config
 if [ -f "$CONFIG" ]; then
-    RAW=$(cat "$CONFIG" | tr -d '\n' '\r')
+    RAW=$(cat "$CONFIG" | tr -d '\n\r')
 else
     log "ERROR: Config not found: $CONFIG"
     exit 1

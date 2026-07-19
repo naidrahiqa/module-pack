@@ -1,0 +1,16 @@
+cmake_minimum_required(VERSION 3.18)
+project(spoof_api C)
+
+set(CMAKE_C_STANDARD 11)
+
+add_executable(spoof_api
+    src/api_handler.c
+    src/json_lite.c
+)
+
+target_link_libraries(spoof_api log)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    target_compile_options(spoof_api PRIVATE -Os -flto)
+    target_link_options(spoof_api PRIVATE -s -flto)
+endif()

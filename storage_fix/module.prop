@@ -1,0 +1,6 @@
+id=storage_fix
+name=Storage Permission Fix
+version=v1.0.0
+versionCode=1
+author=Naidrahiqa
+description=Fix scoped storage permissions for Telegram and other apps

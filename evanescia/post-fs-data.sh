@@ -1,5 +1,5 @@
 #!/system/bin/sh
-# Evanescia v1.0.0 - VM tuning + ZRAM + I/O scheduler
+# Evanescia v1.2.0 - VM tuning + ZRAM + I/O scheduler
 # post-fs-data.sh: early boot, set before zygote
 
 MODDIR=${0%/*}
@@ -18,7 +18,7 @@ wv() {
 
 [ -f "$DIS" ] && { log "Disabled."; exit 0; }
 
-log "=== Evanescia Memory v1.1.0 ==="
+log "=== Evanescia Memory v1.2.0 ==="
 
 # RAM detection
 TOTAL_KB=$(awk '/^MemTotal:/{print $2}' /proc/meminfo); TOTAL_KB=${TOTAL_KB:-0}
@@ -55,11 +55,16 @@ if [ -n "$ZD" ] && [ -f "/sys/block/$ZD/comp_algorithm" ]; then
         CUR=$(echo "$ALGO" | grep -oE '\[[^]]+\]' | tr -d '[]')
         log "  $ZD in use ($USED bytes) — algo: $CUR (locked)"
     else
-        echo "$ALGO" | grep -q "zstd" && echo zstd > "/sys/block/$ZD/comp_algorithm" 2>/dev/null && log "  $ZD: zstd"
+        if echo "$ALGO" | grep -q "zstd"; then
+            echo zstd > "/sys/block/$ZD/comp_algorithm" 2>/dev/null
+            CUR_ALGO=$(cat "/sys/block/$ZD/comp_algorithm" 2>/dev/null)
+            echo "$CUR_ALGO" | grep -q "zstd" && log "  $ZD: zstd OK" || log "  $ZD: zstd FAIL (got: $CUR_ALGO)"
+        fi
         NCPU=$(grep -c ^processor /proc/cpuinfo 2>/dev/null); NCPU=${NCPU:-4}
         STREAMS=$((NCPU / 2)); [ "$STREAMS" -lt 1 ] && STREAMS=1
         echo "$STREAMS" > "/sys/block/$ZD/max_comp_streams" 2>/dev/null
-        log "  $ZD streams: $STREAMS"
+        CUR_STREAMS=$(cat "/sys/block/$ZD/max_comp_streams" 2>/dev/null)
+        [ "$CUR_STREAMS" = "$STREAMS" ] && log "  $ZD streams: $STREAMS OK" || log "  $ZD streams: FAIL (got: $CUR_STREAMS)"
     fi
 fi
 
@@ -69,7 +74,10 @@ for dev in /sys/block/mmcblk*; do
     [ ! -d "$dev" ] && continue
     DN=$(basename "$dev"); case "$DN" in mmcblk*boot*|mmcblk*rpmb) continue;; esac
     SF="$dev/queue/scheduler"; [ ! -f "$SF" ] && continue
-    grep -q "mq-deadline" "$SF" 2>/dev/null && ! grep -q "\[mq-deadline\]" "$SF" 2>/dev/null && echo mq-deadline > "$SF" 2>/dev/null
+    if grep -q "mq-deadline" "$SF" 2>/dev/null && ! grep -q "\[mq-deadline\]" "$SF" 2>/dev/null; then
+        echo mq-deadline > "$SF" 2>/dev/null
+        grep -q "\[mq-deadline\]" "$SF" 2>/dev/null && log "  $DN: mq-deadline OK" || log "  $DN: mq-deadline FAIL"
+    fi
 done
 
 # Re-lock 1x (fight ROM init overrides, skip 3x to save boot time)

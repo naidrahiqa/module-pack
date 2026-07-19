@@ -6,3 +6,6 @@
 *.zip
 *.log
 /package-lock.json
+/zig/
+**/build/
+**/CMakeCache.txt

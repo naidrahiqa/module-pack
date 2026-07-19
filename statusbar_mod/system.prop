@@ -1,0 +1,10 @@
+persist.sys.statusbar.clock=1
+persist.sys.statusbar.battery=1
+persist.sys.statusbar.signal=1
+persist.sys.statusbar.wifi=1
+persist.sys.statusbar.bluetooth=1
+persist.sys.statusbar.nfc=1
+persist.sys.statusbar.alarm=1
+persist.sys.statusbar.hotspot=1
+persist.sys.statusbar.volume=1
+persist.sys.statusbar.headset=1

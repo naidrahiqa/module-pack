@@ -3,3 +3,7 @@ allow ksu proc_swappiness:file write
 allow ksu proc_dirty:file write
 allow ksu proc_extra_free_kbytes:file write
 allow ksu proc_page_cluster:file write
+allow ksu proc_vfs_cache_pressure:file write
+allow ksu proc_min_free_kbytes:file write
+allow ksu proc_drop_caches:file write
+allow ksu proc_compact_memory:file write

@@ -1,0 +1,3 @@
+# SELinux rules for camera_fix module
+# Allow resetprop to modify vendor camera properties
+allow init vendor_camera_prop_file file { read write open getattr };

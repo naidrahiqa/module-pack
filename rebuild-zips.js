@@ -3,12 +3,29 @@ const fs = require('fs');
 const path = require('path');
 
 const modules = [
-  { name: 'evanescia', dir: 'evanescia', zip: 'evanescia-v1.0.0.zip' },
-  { name: 'hyacine-io', dir: 'hyacine_io', zip: 'hyacine-io-v1.0.0.zip' },
-  { name: 'kairitsu-safe', dir: 'kairitsu_safe', zip: 'kairitsu-safe-v1.0.0.zip' },
-  { name: 'spoof_fierce', dir: 'spoof_fierce', zip: 'spoof_fierce-v1.0.0.zip' },
-  { name: 'h_thermal', dir: 'h_thermal', zip: 'h_thermal-v1.0.0.zip' },
-  { name: 'game-perftune', dir: 'game_perftune', zip: 'game_perftune-v1.0.0.zip' },
+  { name: 'evanescia', dir: 'evanescia', zip: 'evanescia-v1.2.0-ksunext.zip' },
+  { name: 'hyacine-io', dir: 'hyacine_io', zip: 'hyacine-io-v1.4.0-ksunext.zip' },
+  { name: 'kairitsu-safe', dir: 'kairitsu_safe', zip: 'kairitsu-safe-v1.2.0-ksunext.zip' },
+  { name: 'spoof_fierce', dir: 'spoof_fierce', zip: 'spoof_fierce-v2.0.0-ksunext.zip' },
+  { name: 'h_thermal', dir: 'h_thermal', zip: 'h_thermal-v1.1.0-ksunext.zip' },
+  { name: 'game-perftune', dir: 'game_perftune', zip: 'game_perftune-v2.0.0-ksunext.zip' },
+  { name: 'multi-audio', dir: 'multi_audio', zip: 'multi-audio-v1.0.0-ksunext.zip' },
+  { name: 'media-fix', dir: 'media_fix', zip: 'media-fix-v1.0.0-ksunext.zip' },
+  { name: 'storage-fix', dir: 'storage_fix', zip: 'storage-fix-v1.0.0-ksunext.zip' },
+  { name: 'ui-enhance', dir: 'ui_enhance', zip: 'ui-enhance-v1.0.0-ksunext.zip' },
+  { name: 'network-fix', dir: 'network_fix', zip: 'network-fix-v1.0.0-ksunext.zip' },
+  { name: 'battery-fix', dir: 'battery_fix', zip: 'battery-fix-v1.0.0-ksunext.zip' },
+  { name: 'camera-fix', dir: 'camera_fix', zip: 'camera-fix-v1.0.0-ksunext.zip' },
+  { name: 'gps-fix', dir: 'gps_fix', zip: 'gps-fix-v1.0.0-ksunext.zip' },
+  { name: 'font-swap', dir: 'font_swap', zip: 'font-swap-v1.0.0-ksunext.zip' },
+  { name: 'touch-fix', dir: 'touch_fix', zip: 'touch-fix-v1.0.0-ksunext.zip' },
+  { name: 'statusbar-mod', dir: 'statusbar_mod', zip: 'statusbar-mod-v1.0.0-ksunext.zip' },
+  { name: 'wifi-boost', dir: 'wifi_boost', zip: 'wifi-boost-v1.0.0-ksunext.zip' },
+  { name: 'power-menu', dir: 'power_menu', zip: 'power-menu-v1.0.0-ksunext.zip' },
+  { name: 'display-color', dir: 'display_color', zip: 'display-color-v1.0.0-ksunext.zip' },
+  { name: 'fingerprint-speed', dir: 'fingerprint_speed', zip: 'fingerprint-speed-v1.0.0-ksunext.zip' },
+  { name: 'speaker-boost', dir: 'speaker_boost', zip: 'speaker-boost-v1.0.0-ksunext.zip' },
+  { name: 'volume-steps', dir: 'volume_steps', zip: 'volume-steps-v1.0.0-ksunext.zip' },
 ];
 
 function walkDir(dir) {

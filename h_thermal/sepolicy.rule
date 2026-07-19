@@ -1,0 +1,3 @@
+allow ksu sysfs_thermal:file write
+allow ksu proc_ppm:file write
+allow ksu kernel:system module_request

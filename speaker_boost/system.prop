@@ -1,0 +1,14 @@
+persist.vendor.audio.speaker.boost=8
+persist.vendor.audio.headset.boost=6
+persist.vendor.audio.volume.boost=1
+persist.vendor.audio.volume.steps=15
+persist.vendor.audio.voice.volume=1
+persist.vendor.audio.ring.volume=1
+persist.vendor.audio.notification.volume=1
+persist.vendor.audio.alarm.volume=1
+persist.vendor.audio.system.volume=1
+persist.vendor.audio.bt.volume=1
+ro.vendor.audio.speaker.boost=8
+persist.vendor.audio.fluence.voicerec=1
+persist.vendor.audio.fluence.speaker=1
+persist.vendor.audio.hifi=false

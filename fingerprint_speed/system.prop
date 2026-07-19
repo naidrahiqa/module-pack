@@ -1,0 +1,11 @@
+persist.sys.fp.quick_unlock=1
+persist.sys.fp.one_tap_unlock=1
+persist.sys.fp.wakeup=1
+persist.vendor.fp.quick_unlock=1
+persist.vendor.fp.wakeup=1
+ro.vendor.fingerprint.quick_unlock=1
+persist.sys.biometrics.unlock=1
+persist.sys.fp.unlock.delay=0
+persist.vendor.fp.unlock.delay=0
+persist.sys.fp.success_vib=1
+persist.vendor.fp.standalone=1

@@ -26,7 +26,7 @@ Device spoofing module for KernelSU. Spoofs product properties to unlock higher 
 
 ## Installation
 
-1. Download `Spoof_Fierce_v3.2.0.zip`
+1. Download `Spoof_Fierce_v1.0.0.zip`
 2. Open KernelSU app → Modules → Install from storage
 3. Select the zip file
 4. Reboot
@@ -132,7 +132,7 @@ rm /data/local/tmp/spoof_fierce_disable
 
 ```
 spoof_fierce/
-├── module.prop          # Module metadata (v3.2.0)
+├── module.prop          # Module metadata (v1.0.0)
 ├── post-fs-data.sh      # Boot-time spoof + marketname
 ├── service.sh           # Runtime verify + app scan
 ├── api.sh               # WebUI backend

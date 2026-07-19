@@ -1,0 +1,9 @@
+# Battery Optimization system properties
+persist.sys.dont_roam=false
+ro.config.low_battery_annoyance=false
+persist.sys.powersave=true
+ro.power.save.mode=1
+persist.vendor.power.savings.mode=1
+ro.vendor.qti.cgroup_follow.enable=1
+persist.vendor.vilte_support=0
+persist.vendor.volte_support=1

@@ -1,0 +1,5 @@
+storage_scoped_access=false
+persist.fuse_sdcard=false
+ro.crypto.entropy=true
+vold.decrypt=0
+vold.has_adoptable=0

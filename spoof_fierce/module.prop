@@ -1,6 +1,6 @@
 id=spoof_fierce
 name=Spoof Fierce
-version=v1.0.0
+version=v2.0.0
 versionCode=1
 author=Naidrahiqa
 description=Universal device spoofing with Zygisk, auto device detection, and per-game FPS unlock

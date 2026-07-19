@@ -1,4 +1,4 @@
-# Spoof Fierce v3.2.0 - SELinux Rules (KernelSU)
+# Spoof Fierce v1.0.0 - SELinux Rules (KernelSU)
 allow su default_prop:property_service set
 allow su system_prop:property_service set
 allow su build_prop:property_service set

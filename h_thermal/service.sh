@@ -1,5 +1,5 @@
 #!/system/bin/sh
-# H-Thermal v1.0.0 - Universal thermal disable
+# H-Thermal v1.1.0 - Universal thermal disable
 # Auto-detects Qualcomm / MediaTek and applies appropriate paths
 
 MODDIR=${0%/*}
@@ -17,7 +17,7 @@ wait_until_login() {
 
 wait_until_login
 
-log "=== H-Thermal v1.0.0 ==="
+log "=== H-Thermal v1.1.0 ==="
 
 # Detect chipset
 CHIP=$(getprop ro.hardware.chipname 2>/dev/null)
@@ -45,7 +45,14 @@ for zone in /sys/class/thermal/thermal_zone*/mode; do
     [ "$val" = "enabled" ] && echo "disabled" > "$zone" 2>/dev/null
     [ "$val" = "1" ] && echo "0" > "$zone" 2>/dev/null
 done
-log "Thermal zones disabled"
+# Verify thermal zone disable
+ZD_DONE=0; ZD_FAIL=0
+for zone in /sys/class/thermal/thermal_zone*/mode; do
+    [ ! -f "$zone" ] && continue
+    cur=$(cat "$zone" 2>/dev/null)
+    [ "$cur" = "disabled" ] || [ "$cur" = "0" ] && ZD_DONE=$((ZD_DONE + 1)) || ZD_FAIL=$((ZD_FAIL + 1))
+done
+log "Thermal zones disabled: $ZD_DONE ok, $ZD_FAIL failed"
 
 # ============================================
 # PHASE 2: Stop thermal services (universal)
@@ -62,8 +69,8 @@ done
 log "Thermal services stopped"
 
 # Zero out thermal properties (single pass)
-getprop 2>/dev/null | grep -i 'ro.*thermal' | grep -oP '\[.*?\]' | tr -d '[]' | while read -r prop; do
-    resetprop -n "$prop" 0 2>/dev/null
+getprop 2>/dev/null | grep -i 'ro.*thermal' | sed 's/.*\[\(.*\)\].*/\1/' | while read -r prop; do
+    [ -n "$prop" ] && resetprop -n "$prop" 0 2>/dev/null
 done
 log "Thermal props zeroed"
 
@@ -78,7 +85,9 @@ if [ "$IS_MTK" -eq 1 ]; then
     for policy in 3 4 5 6 7 8; do
         echo "$policy 0" > /proc/ppm/policy_status 2>/dev/null
     done
-    log "PPM policies disabled"
+    # Verify PPM
+    PPM_OK=$(grep -c "^3 0\|^4 0\|^5 0\|^6 0\|^7 0\|^8 0" /proc/ppm/policy_status 2>/dev/null)
+    log "PPM policies disabled: $PPM_OK/6 verified"
 
     # Disable cci thermal
     echo 0 > /proc/ppm/policy 2>/dev/null

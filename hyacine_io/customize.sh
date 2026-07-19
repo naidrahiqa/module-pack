@@ -13,6 +13,7 @@ ui_print "▸ Setting permissions..."
 set_perm "$MODPATH/post-fs-data.sh" 0 0 0755
 set_perm "$MODPATH/service.sh" 0 0 0755
 [ -f "$MODPATH/sepolicy.rule" ] && set_perm "$MODPATH/sepolicy.rule" 0 0 0644
+[ -f "$MODPATH/system/bin/mount.ntfs" ] && set_perm "$MODPATH/system/bin/mount.ntfs" 0 0 0755
 
 ui_print "▸ Storage configuration:"
 ui_print "  • Read-ahead: 1024 KB for eMMC/SD"

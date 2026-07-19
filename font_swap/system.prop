@@ -1,0 +1,4 @@
+persist.sys.font.flipping=1
+ro.config.font_scale=1.0
+persist.sys.font_rendering=1
+debug.hwui.font_cache=1

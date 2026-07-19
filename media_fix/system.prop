@@ -1,0 +1,8 @@
+media.swcodec.service.enabled=true
+media.omxcodec.service.enabled=true
+vendor.media.omxcodec.service.enabled=true
+ro.media.max_threads=8
+ro.media.audio_threads=4
+media.stagefright.ccodec=1
+ro.media.video.max_threads=8
+ro.media.video.decoder_timeout=30000

@@ -1,0 +1,8 @@
+persist.sys.touch.touchsize=10
+persist.sys.touch.edgefilter=0
+persist.sys.touch.glove.mode=0
+persist.sys.touch.palm.reject=1
+persist.vendor.touch.touchpoint=1
+persist.vendor.touch.edgefilter=0
+ro.vendor.touch.touchsize=10
+persist.sys.inputboost=1

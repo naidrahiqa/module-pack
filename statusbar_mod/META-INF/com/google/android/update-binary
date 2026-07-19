@@ -1,0 +1,28 @@
+#!/sbin/sh
+# Magisk Module Installer Script
+# This file is required for KSU/Magisk module installation
+
+TMPDIR=/dev/tmp
+PERSISTDIR=/sbin/.magisk/mirror/persist
+
+if [ ! -f /data/adb/magisk/util_functions.sh ]; then
+    if [ ! -f /data/adb/ksu/bin/ksud ]; then
+        echo "! KSU or Magisk not found"
+        exit 1
+    fi
+fi
+
+# Extract module files
+MODPATH=$TMPDIR/module
+mkdir -p $MODPATH
+
+# Copy module files to MODPATH
+cp -r /tmp/module/* $MODPATH/ 2>/dev/null
+
+# Set permissions
+chmod 755 $MODPATH/post-fs-data.sh 2>/dev/null
+chmod 755 $MODPATH/service.sh 2>/dev/null
+chmod 755 $MODPATH/statusbar_config.sh 2>/dev/null
+chmod 755 $MODPATH/customize.sh 2>/dev/null
+
+exit 0

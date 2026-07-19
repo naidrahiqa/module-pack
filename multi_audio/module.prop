@@ -1,0 +1,6 @@
+id=multi_audio
+name=Multi Audio Play
+version=v1.0.0
+versionCode=1
+author=Naidrahiqa
+description=Enable concurrent audio playback for PIP and multi-app audio

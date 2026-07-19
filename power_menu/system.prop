@@ -1,0 +1,11 @@
+# Power Menu — system.prop
+# Extended power menu options
+
+persist.sys.power_menu.screenshot=1
+persist.sys.power_menu.airplane=1
+persist.sys.power_menu.reboot=1
+persist.sys.power_menu.shutdown=1
+persist.sys.power_menu.lock=1
+persist.sys.power_menu.emergency=1
+persist.sys.power_menu.users=1
+ro.config.power_menu.advanced=1

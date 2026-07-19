@@ -1,0 +1,6 @@
+id=media_fix
+name=Media Playback Fix
+version=v1.0.0
+versionCode=1
+author=Naidrahiqa
+description=Fix video playback smoothness in Gallery and other media apps

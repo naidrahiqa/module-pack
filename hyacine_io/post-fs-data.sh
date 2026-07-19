@@ -1,5 +1,5 @@
 #!/system/bin/sh
-# Hyacine IO v1.0.0 - Early boot I/O tuning + FUSE passthrough
+# Hyacine IO v1.4.0 - Early boot I/O tuning + FUSE passthrough
 # post-fs-data.sh
 
 MODDIR=${0%/*}
@@ -23,10 +23,12 @@ getprop persist.sys.susfs.enable 2>/dev/null | grep -q "true" && HAS_SUSFS=1
 
 if [ "$HAS_SUSFS" -eq 0 ]; then
     resetprop persist.sys.fuse.passthrough.enable true 2>/dev/null
-    log "FUSE passthrough: ENABLED"
+    FUSE_VAL=$(getprop persist.sys.fuse.passthrough.enable 2>/dev/null)
+    [ "$FUSE_VAL" = "true" ] && log "FUSE passthrough: ENABLED (verified)" || log "FUSE passthrough: ENABLED (verify failed, got: $FUSE_VAL)"
 else
     resetprop persist.sys.fuse.passthrough.enable false 2>/dev/null
-    log "FUSE passthrough: DISABLED (SuSFS present)"
+    FUSE_VAL=$(getprop persist.sys.fuse.passthrough.enable 2>/dev/null)
+    [ "$FUSE_VAL" = "false" ] && log "FUSE passthrough: DISABLED (SuSFS, verified)" || log "FUSE passthrough: DISABLED (verify failed, got: $FUSE_VAL)"
 fi
 
 # Read-ahead (eMMC/SD only)

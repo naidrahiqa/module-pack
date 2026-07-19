@@ -1,0 +1,6 @@
+id=battery_fix
+name=Battery Optimization
+version=v1.0.0
+versionCode=1
+author=Naidrahiqa
+description=Battery optimization with improved doze mode and wakelock management

@@ -1,0 +1,2 @@
+allow ksu surfaceflinger:file write
+allow ksu sysfs:file write

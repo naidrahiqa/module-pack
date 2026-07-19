@@ -1,0 +1,6 @@
+id=gps_fix
+name=GPS Accuracy Fix
+version=v1.0.0
+versionCode=1
+author=Naidrahiqa
+description=GPS accuracy and lock speed improvement for Redmi 10 selene

@@ -1,5 +1,5 @@
 #!/system/bin/sh
-# Spoof Fierce v1.0.0 — Runtime verify (Zygisk)
+# Spoof Fierce v2.0.0 — Runtime verify (Zygisk)
 # Re-applies props if ROM resets them; Zygisk handles per-game spoof
 LOG="/data/local/tmp/spoof_fierce.log"
 RP="/data/adb/ksu/bin/resetprop"
@@ -27,7 +27,7 @@ if [ ! -f "$CONFIG" ]; then
     log "ERROR: Config not found"
     exit 1
 fi
-RAW=$(cat "$CONFIG" | tr -d '\n' '\r')
+RAW=$(cat "$CONFIG" | tr -d '\n\r')
 
 TARGET_MODEL=$(json_val "$RAW" "model")
 TARGET_BRAND=$(json_val "$RAW" "brand")
